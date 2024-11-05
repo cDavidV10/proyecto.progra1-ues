@@ -28,6 +28,8 @@ void login();
 void iniciarSesion();
 void crearCuenta();
 bool verificarUsuario(bool);
+bool comprobarPassword();
+bool validarUsuario();
 void password();
 int leer();
 
@@ -110,10 +112,27 @@ void crearCuenta()
 
     system("cls");
     cout << "------     CREAR CUENTA     ------" << endl;
-    cout << "Usuario: ";
-    cin.getline(usuario.usuario, 20);
-    cout << "Password: ";
-    password();
+    do
+    {
+        cout << "Usuario: ";
+        cin.getline(usuario.usuario, 20);
+        if (validarUsuario())
+        {
+            cout << RED << "El usuario debe detener entre 4 y 20 caracteres" << RESET << endl;
+        }
+    } while (validarUsuario());
+
+    do
+    {
+        cout << "Password: ";
+        password();
+
+        if (!comprobarPassword())
+        {
+            cout << RED << "\nEl password debe de tener minimo 8 caracteres, un numero y una mayuscula" << RESET << endl;
+        }
+
+    } while (!comprobarPassword());
 
     if (verificarUsuario(false))
     {
@@ -136,6 +155,42 @@ void crearCuenta()
     }
 
     system("Pause");
+}
+
+bool validarUsuario()
+{
+    return (strlen(usuario.usuario) < 4 || strlen(usuario.usuario) > MAX_LENGTH);
+}
+
+bool comprobarPassword()
+{
+    bool largo = false;
+    bool mayus = false;
+    bool numero = false;
+
+    if (strlen(usuario.password) > 8)
+    {
+        largo = true;
+    }
+
+    for (int i = 0; i < strlen(usuario.password); i++)
+    {
+        if (isupper(usuario.password[i]))
+        {
+            mayus = true;
+        }
+
+        if (isdigit(usuario.password[i]))
+        {
+            numero = true;
+        }
+    }
+
+    if (largo && mayus && numero)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool verificarUsuario(bool verificarPass)
