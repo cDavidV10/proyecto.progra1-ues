@@ -16,8 +16,6 @@ const string RUTA_REGISTRO = "registro.bin";
 const string RED = "\033[1;31m";
 const string GREEN = "\033[1;32m";
 const string RESET = "\033[0m";
-
-///////////////////////////// Enmanuel ///////////////////////////
 const int MAX_CLIENT = 50;
 const string Registro = "clientes.bin";
 
@@ -25,10 +23,9 @@ struct Clientes
 {
     char nombres[MAX_CLIENT];
     char apellidos[MAX_CLIENT];
-    char dui[MAX_CLIENT];
+    char dui[11];
+    bool pago;
 } cliente;
-
-///////////////////////////////////////////////////////////////////
 
 struct Usuarios
 {
@@ -56,14 +53,13 @@ int leer();
 void menuPrincipal();
 void agregarPago();
 void verPago();
-
-//////////////////////////////////////////////
 void correlativo();
 void seccionCliente();
 void ingresarClientes();
+bool validarCliente(char[]);
+bool validarDui(char[]);
 void verClientes();
 void gotoxy(int, int);
-//////////////////////////////////////////////
 
 int main(int argc, char const *argv[])
 {
@@ -87,16 +83,7 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-//////////////////////////
-void gotoxy(int x, int y)
-{
-    HANDLE hcon = GetStdHandle(STD_OUTPUT_HANDLE);
-    COORD dwPos;
-    dwPos.X = x;
-    dwPos.Y = y;
-    SetConsoleCursorPosition(hcon, dwPos);
-}
-//////////////////////////
+
 void login()
 {
     system("cls");
@@ -137,15 +124,12 @@ void iniciarSesion()
 
     if (ingresa)
     {
-        cout << "\nBienvenidos al sistema" << endl;
         menuPrincipal();
     }
     else
     {
         cout << RED << "\nNo pudo entrar al sistema" << RESET << endl;
     }
-
-    system("pause");
 }
 
 void crearCuenta()
@@ -234,11 +218,124 @@ void menuPrincipal()
     } while (menuOpcion != 5);
 }
 
+void ingresarClientes()
+{
+
+    FILE *archivo = fopen(Registro.c_str(), "ab");
+
+    if (archivo != NULL)
+    {
+
+        system("cls");
+
+        fflush(stdin);
+
+        do
+        {
+            cout << "Ingrese los nombres del cliente: ";
+            cin.getline(cliente.nombres, MAX_CLIENT);
+        } while (!validarCliente(cliente.nombres));
+
+        fflush(stdin);
+
+        do
+        {
+            cout << "Ingrese los apellidos del cliente: ";
+            cin.getline(cliente.apellidos, MAX_CLIENT);
+        } while (!validarCliente(cliente.apellidos));
+
+        fflush(stdin);
+
+        do
+        {
+            cout << "Ingrese el DUI del cliente: ";
+            cin.getline(cliente.dui, 11);
+        } while (!validarDui(cliente.dui));
+
+        cliente.pago = false;
+
+        fwrite(&cliente, sizeof(Clientes), 1, archivo);
+
+        fflush(stdin);
+    }
+    else
+    {
+        cout << "[ERROR]: Creacion de archivo invalida.";
+    }
+
+    fclose(archivo);
+}
+
+void verClientes()
+{
+    system("cls");
+
+    int i = 0;
+    Clientes cliente;
+
+    FILE *archivo = fopen(Registro.c_str(), "rb");
+
+    if (archivo != NULL)
+    {
+        gotoxy(30, 0);
+        cout << "***** LISTA DE CLIENTES *****";
+        gotoxy(1, 2);
+        cout << "No ";
+        gotoxy(5, 2);
+        cout << "Nombres ";
+        gotoxy(30, 2);
+        cout << "Apellidos ";
+        gotoxy(50, 2);
+        cout << "DUI ";
+        gotoxy(65, 2);
+        cout << "PAGOS";
+
+        while (!feof(archivo))
+        {
+            fread(&cliente, sizeof(Clientes), 1, archivo);
+
+            if (!feof(archivo))
+            {
+                gotoxy(1, 3 + i);
+                cout << i + 1;
+                gotoxy(5, 3 + i);
+                cout << cliente.nombres;
+                gotoxy(30, 3 + i);
+                cout << cliente.apellidos;
+                gotoxy(50, 3 + i);
+                cout << cliente.dui;
+
+                if (cliente.pago)
+                {
+                    gotoxy(65, 3 + i);
+                    cout << GREEN << "Pagado" << RESET;
+                }
+                else
+                {
+                    gotoxy(65, 3 + i);
+                    cout << RED << "Sin Pago" << RESET;
+                }
+            }
+
+            i++;
+        }
+    }
+    else
+    {
+        cout << "[ERROR]: Creacion de archivo invalida.";
+    }
+
+    fclose(archivo);
+
+    cout << "\n\n";
+    system("pause");
+}
+
 void agregarPago()
 {
     cin.ignore();
     system("cls");
-    cout << "------PAGO------" << endl;
+    cout << "------     PAGO    ------" << endl;
 
     strcpy(registroPago.persona, "Genesis");
     registroPago.pago = 5.56;
@@ -295,6 +392,36 @@ void verPago()
 bool validarUsuario()
 {
     return (strlen(usuario.usuario) < 4 || strlen(usuario.usuario) > MAX_LENGTH);
+}
+
+bool validarCliente(char cliente[])
+{
+    for (int i = 0; i < strlen(cliente); i++)
+    {
+        if (!((cliente[i] >= 'A' && cliente[i] <= 'Z') ||
+              (cliente[i] >= 'a' && cliente[i] <= 'z') || cliente[i] == ' '))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool validarDui(char dui[])
+{
+    if (strlen(dui) > 10 || dui[8] != '-')
+    {
+        return false;
+    }
+
+    for (int i = 0; i < strlen(dui); i++)
+    {
+        if (dui[i] >= '0' && dui[i] <= '9')
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool comprobarPassword()
@@ -412,101 +539,11 @@ int leer()
     return numero;
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-
-void ingresarClientes()
+void gotoxy(int x, int y)
 {
-    char r = 's';
-
-    FILE *archivo = fopen(Registro.c_str(), "ab");
-
-    if (archivo != NULL)
-    {
-
-        while (r == 's' || r == 'S')
-        {
-            system("cls");
-
-            fflush(stdin);
-
-            cout << "Ingrese los nombres del cliente: ";
-            cin.getline(cliente.nombres, MAX_CLIENT);
-
-            fflush(stdin);
-
-            cout << "Ingrese los apellidos del cliente: ";
-            cin.getline(cliente.apellidos, MAX_CLIENT);
-
-            fflush(stdin);
-
-            cout << "Ingrese el DUI del cliente: ";
-            cin.getline(cliente.dui, MAX_CLIENT);
-
-            fwrite(&cliente, sizeof(Clientes), 1, archivo);
-
-            cout << "Desea seguir agregando clientes? (s/n) \nRespuesta: ";
-            cin >> r;
-
-            fflush(stdin);
-        }
-    }
-    else
-    {
-        cout << "[ERROR]: Creacion de archivo invalida.";
-    }
-
-    fclose(archivo);
+    HANDLE hcon = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD dwPos;
+    dwPos.X = x;
+    dwPos.Y = y;
+    SetConsoleCursorPosition(hcon, dwPos);
 }
-
-void verClientes()
-{
-    system("cls");
-
-    int i = 0;
-    Clientes cliente;
-
-    FILE *archivo = fopen(Registro.c_str(), "rb");
-
-    if (archivo != NULL)
-    {
-        gotoxy(30, 0);
-        cout << "***** LISTA DE CLIENTES *****";
-        gotoxy(1, 2);
-        cout << "No ";
-        gotoxy(5, 2);
-        cout << "Nombres ";
-        gotoxy(30, 2);
-        cout << "Apellidos ";
-        gotoxy(50, 2);
-        cout << "DUI ";
-
-        while (!feof(archivo))
-        {
-            fread(&cliente, sizeof(Clientes), 1, archivo);
-
-            if (!feof(archivo))
-            {
-                gotoxy(1, 3 + i);
-                cout << i + 1;
-                gotoxy(5, 3 + i);
-                cout << cliente.nombres;
-                gotoxy(30, 3 + i);
-                cout << cliente.apellidos;
-                gotoxy(50, 3 + i);
-                cout << cliente.dui;
-            }
-
-            i++;
-        }
-    }
-    else
-    {
-        cout << "[ERROR]: Creacion de archivo invalida.";
-    }
-
-    fclose(archivo);
-
-    cout << "\n\n";
-    system("pause");
-}
-//////////////////////////////////////////////////////////////////////////////
