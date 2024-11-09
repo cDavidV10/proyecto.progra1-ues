@@ -7,7 +7,7 @@
 #include <windows.h>
 
 using namespace std;
-const int MAX_LENGTH = 20;
+const int MAX_LENGTH = 30; // Cambie el tamano de 20 a 30
 const int ENTER = 13;
 const int BACKSPACE = 8;
 const string RUTA_USUARIOS = "usuarios.bin";
@@ -69,9 +69,11 @@ int main(int argc, char const *argv[])
 
         switch (loginOpcion)
         {
+
         case 1:
             iniciarSesion();
             break;
+
         case 2:
             crearCuenta();
             break;
@@ -79,6 +81,7 @@ int main(int argc, char const *argv[])
         default:
             break;
         }
+
     } while (loginOpcion != 3);
 
     return 0;
@@ -89,7 +92,7 @@ void login()
     system("cls");
     cout << "------     BIENVENIDOS AL SISTEMA     ------" << endl;
     cout << "1. Iniciar Sesion" << endl;
-    cout << "2. Crear Cuenta" << endl;
+    cout << "2. Registrarse" << endl; // Cambie de crear cuenta a registrarse
     cout << "3. Salir" << endl;
     cout << "Seleccione una opcion del menu: ";
     loginOpcion = leer();
@@ -120,6 +123,7 @@ void iniciarSesion()
             intentos--;
             system("pause>null");
         }
+
     } while (!ingresa && intentos > 0);
 
     if (ingresa)
@@ -155,7 +159,7 @@ void crearCuenta()
 
         if (!comprobarPassword())
         {
-            cout << RED << "\nEl password debe de tener minimo 8 caracteres, un numero y una mayuscula" << RESET << endl;
+            cout << RED << "\nEl password debe de tener minimo 8 caracteres, un numero, una mayuscula y un caracter especial" << RESET << endl;
         }
 
     } while (!comprobarPassword());
@@ -174,6 +178,7 @@ void crearCuenta()
             fclose(archivo);
             cout << GREEN << "\nCuenta creada correctamente" << RESET << endl;
         }
+
         else
         {
             cout << RED << "\nError al crear el usuario" << RESET << endl;
@@ -199,18 +204,23 @@ void menuPrincipal()
 
         switch (menuOpcion)
         {
+
         case 1:
             ingresarClientes();
             break;
+
         case 2:
             agregarPago();
             break;
+
         case 3:
             verClientes();
             break;
+
         case 4:
             verPago();
             break;
+
         default:
             break;
         }
@@ -234,6 +244,7 @@ void ingresarClientes()
         {
             cout << "Ingrese los nombres del cliente: ";
             cin.getline(cliente.nombres, MAX_CLIENT);
+
         } while (!validarCliente(cliente.nombres));
 
         fflush(stdin);
@@ -242,6 +253,7 @@ void ingresarClientes()
         {
             cout << "Ingrese los apellidos del cliente: ";
             cin.getline(cliente.apellidos, MAX_CLIENT);
+
         } while (!validarCliente(cliente.apellidos));
 
         fflush(stdin);
@@ -250,6 +262,7 @@ void ingresarClientes()
         {
             cout << "Ingrese el DUI del cliente: ";
             cin.getline(cliente.dui, 11);
+
         } while (!validarDui(cliente.dui));
 
         cliente.pago = false;
@@ -258,9 +271,10 @@ void ingresarClientes()
 
         fflush(stdin);
     }
+
     else
     {
-        cout << "[ERROR]: Creacion de archivo invalida.";
+        cout << RED << "[ERROR]: Creacion de archivo invalida." << RESET; // le agregue color
     }
 
     fclose(archivo);
@@ -288,7 +302,7 @@ void verClientes()
         gotoxy(50, 2);
         cout << "DUI ";
         gotoxy(65, 2);
-        cout << "PAGOS";
+        cout << "ESTADO"; // cambie pagos por estado
 
         while (!feof(archivo))
         {
@@ -310,6 +324,7 @@ void verClientes()
                     gotoxy(65, 3 + i);
                     cout << GREEN << "Pagado" << RESET;
                 }
+
                 else
                 {
                     gotoxy(65, 3 + i);
@@ -320,9 +335,10 @@ void verClientes()
             i++;
         }
     }
+
     else
     {
-        cout << "[ERROR]: Creacion de archivo invalida.";
+        cout << RED << "[ERROR]: Creacion de archivo invalida." << RESET; // le agregue color
     }
 
     fclose(archivo);
@@ -331,63 +347,177 @@ void verClientes()
     system("pause");
 }
 
+/////////////////////////////////////////////////
+/////////////////////Genesis////////////////////
+
 void agregarPago()
 {
+
+    bool clienteEncontrado;
+    int numClientes;
+
     cin.ignore();
     system("cls");
     cout << "------     PAGO    ------" << endl;
 
-    strcpy(registroPago.persona, "Genesis");
-    registroPago.pago = 5.56;
+    char duiCliente[11];
+    double pago;
 
-    FILE *archivo = fopen(RUTA_REGISTRO.c_str(), "ab");
+    FILE *archivoClientes = fopen(Registro.c_str(), "rb");
+    FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "ab");
 
-    if (archivo != NULL)
+    if (archivoClientes != NULL && archivoPagos != NULL)
     {
-        fwrite(&registroPago, sizeof(RegistroPago), 1, archivo);
-        fclose(archivo);
-        cout << GREEN << "\nPago agregado correctamente" << RESET << endl;
+        Clientes cliente;
+        RegistroPago registroPago;
+        clienteEncontrado = false;
+        numClientes = 0;
+        Clientes clientes[MAX_CLIENT];
+
+        while (fread(&cliente, sizeof(Clientes), 1, archivoClientes) == 1)
+        {
+            clientes[numClientes++] = cliente;
+        }
+
+        if (numClientes == 0)
+        {
+            cout << RED << "\nNo hay usuarios registrados." << RESET << endl;
+            fclose(archivoClientes);
+            fclose(archivoPagos);
+            system("pause");
+            return;
+        }
+
+        cout << "Ingrese el DUI del cliente: ";
+        cin.getline(duiCliente, 11);
+
+        for (int i = 0; i < numClientes; i++)
+        {
+            if (strcmp(clientes[i].dui, duiCliente) == 0)
+            {
+                clienteEncontrado = true;
+                cout << "Ingrese el monto del pago: $";
+                cin >> pago;
+
+                if (pago > 0)
+                {
+                    strcpy(registroPago.persona, clientes[i].nombres);
+                    registroPago.pago = pago;
+                    fwrite(&registroPago, sizeof(RegistroPago), 1, archivoPagos);
+
+                    clientes[i].pago = true;
+
+                    fclose(archivoClientes);
+                    archivoClientes = fopen(Registro.c_str(), "wb");
+
+                    for (int j = 0; j < numClientes; j++)
+                    {
+                        fwrite(&clientes[j], sizeof(Clientes), 1, archivoClientes);
+                    }
+
+                    cout << GREEN << "\nPago agregado correctamente" << RESET << endl;
+                    system("pause");
+                    break;
+                }
+
+                else
+                {
+                    cout << RED << "\nEl pago debe ser mayor a 0" << RESET << endl;
+                    system("pause");
+                    break;
+                }
+            }
+        }
+
+        if (!clienteEncontrado)
+        {
+            cout << RED << "\nCliente no encontrado" << RESET << endl;
+            system("pause");
+        }
+
+        fclose(archivoClientes);
+        fclose(archivoPagos);
     }
+
     else
     {
-        cout << RED << "\nError al agregar el pago" << RESET << endl;
+        cout << RED << "\nError al abrir los archivos de clientes o pagos" << RESET << endl;
+        system("pause");
     }
-
-    system("pause");
 }
 
 void verPago()
 {
+    bool pagoRealizado;
+    bool registroEncontrado;
+
     system("cls");
     cout << "------     VER PAGO     ------" << endl;
 
-    FILE *archivo = fopen(RUTA_REGISTRO.c_str(), "rb");
+    FILE *archivoClientes = fopen(Registro.c_str(), "rb");
+    FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "rb");
 
-    if (archivo != NULL)
+    if (archivoClientes != NULL && archivoPagos != NULL)
     {
-        bool registroEncontrado = false;
-        while (fread(&registroPago, sizeof(RegistroPago), 1, archivo) == 1)
+        Clientes cliente;
+
+        RegistroPago pago;
+
+        registroEncontrado = false;
+
+        while (fread(&cliente, sizeof(Clientes), 1, archivoClientes) == 1)
         {
-            cout << "Persona: " << registroPago.persona << endl;
-            cout << "Pago: $" << registroPago.pago << endl;
-            registroEncontrado = true;
-            cout << "----------------------------" << endl;
+            fseek(archivoPagos, 0, SEEK_SET);
+
+            pagoRealizado = false;
+
+            while (fread(&pago, sizeof(RegistroPago), 1, archivoPagos) == 1)
+            {
+                if (strcmp(cliente.nombres, pago.persona) == 0)
+                {
+                    gotoxy(0, 3 + registroEncontrado);
+                    cout << "Cliente: " << cliente.nombres << " " << cliente.apellidos;
+                    cout << " | DUI: " << cliente.dui;
+                    cout << " | Monto: $" << pago.pago;
+                    cout << " | " << GREEN << "Pagado" << RESET << endl;
+
+                    pagoRealizado = true;
+
+                    registroEncontrado = true;
+
+                    break;
+                }
+            }
+
+            if (!pagoRealizado)
+            {
+                gotoxy(0, 3 + registroEncontrado);
+                cout << "Cliente: " << cliente.nombres << " " << cliente.apellidos;
+                cout << " | DUI: " << cliente.dui;
+                cout << " | " << RED << "Sin Pago" << RESET << endl;
+                registroEncontrado = true;
+            }
         }
 
         if (!registroEncontrado)
         {
-            cout << RED << "\nNo se han encontrado registros de pago" << RESET << endl;
+            cout << RED << "\nNo se han encontrado registros de clientes o pagos." << RESET << endl;
         }
 
-        fclose(archivo);
+        fclose(archivoClientes);
+        fclose(archivoPagos);
     }
+
     else
     {
-        cout << RED << "\nError al abrir el archivo de pagos" << RESET << endl;
+        cout << RED << "\nError al abrir los archivos de clientes o pagos" << RESET << endl;
     }
 
     system("pause");
 }
+
+/////////////////////////////////////////////////
+/////////////////////Fin////////////////////////
 
 bool validarUsuario()
 {
@@ -424,13 +554,16 @@ bool validarDui(char dui[])
     return false;
 }
 
-bool comprobarPassword()
+bool comprobarPassword() // Te agregue lo del caracter especial
 {
     bool largo = false;
     bool mayus = false;
     bool numero = false;
+    bool especial = false;
 
-    if (strlen(usuario.password) > 8)
+    const char caracteres[] = "!@#$%^&*()-_=+[]{}|;:'\",.<>?/";
+
+    if (strlen(usuario.password) >= 8) // te cambie que la contrasena sea desde 8 en adelante
     {
         largo = true;
     }
@@ -446,12 +579,22 @@ bool comprobarPassword()
         {
             numero = true;
         }
+
+        for (int j = 0; j < strlen(caracteres); j++)
+        {
+            if (usuario.password[i] == caracteres[j])
+            {
+                especial = true;
+                break;
+            }
+        }
+
+        if (largo && mayus && numero && especial)
+        {
+            return true;
+        }
     }
 
-    if (largo && mayus && numero)
-    {
-        return true;
-    }
     return false;
 }
 
