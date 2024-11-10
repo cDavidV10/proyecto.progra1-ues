@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
+#include <cctype>
 #include <conio.h>
 #include <windows.h>
 
@@ -56,6 +57,7 @@ void verPago();
 void correlativo();
 void seccionCliente();
 void ingresarClientes();
+void validarMayusculas();
 bool validarCliente(char[]);
 void formatoNombre();
 void formatoApellido();
@@ -258,6 +260,8 @@ void ingresarClientes()
             formatoApellido();
 
         } while (!validarCliente(cliente.apellidos));
+
+        validarMayusculas();
 
         fflush(stdin);
 
@@ -576,6 +580,61 @@ void formatoApellido()
         strcat(cliente.apellidos, auxiliar);
         strcat(cliente.apellidos, " ");
         auxiliar = strtok(NULL, " ");
+    }
+}
+
+void validarMayusculas()
+{
+    bool isEspacio = true;
+
+    if (islower(cliente.nombres[0]))
+    {
+        cliente.nombres[0] = toupper(cliente.nombres[0]);
+    }
+
+    for (int i = 1; i < strlen(cliente.nombres); i++)
+    {
+        isEspacio = true;
+
+        if (cliente.nombres[i - 1] == ' ' && islower(cliente.nombres[i]))
+        {
+            cliente.nombres[i] = toupper(cliente.nombres[i]);
+            isEspacio = false;
+        }
+        else if (cliente.nombres[i - 1] == ' ' && isupper(cliente.nombres[i]))
+        {
+            isEspacio = false;
+        }
+
+        if (i > 0 && isupper(cliente.nombres[i]) && isEspacio)
+        {
+            cliente.nombres[i] = tolower(cliente.nombres[i]);
+        }
+    }
+
+    if (isupper(cliente.apellidos[0]) == false)
+    {
+        cliente.apellidos[0] = toupper(cliente.apellidos[0]);
+    }
+
+    for (int i = 1; i < strlen(cliente.apellidos); i++)
+    {
+        isEspacio = true;
+
+        if (cliente.apellidos[i - 1] == ' ' && islower(cliente.apellidos[i]))
+        {
+            cliente.apellidos[i] = toupper(cliente.apellidos[i]);
+            isEspacio = false;
+        }
+        else if (cliente.apellidos[i - 1] == ' ' && isupper(cliente.apellidos[i]))
+        {
+            isEspacio = false;
+        }
+
+        if (i > 0 && isupper(cliente.apellidos[i]) && isEspacio)
+        {
+            cliente.apellidos[i] = tolower(cliente.apellidos[i]);
+        }
     }
 }
 
