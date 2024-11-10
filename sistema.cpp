@@ -276,6 +276,9 @@ void ingresarClientes()
 
         fwrite(&cliente, sizeof(Clientes), 1, archivo);
 
+        cout << GREEN << "Cliente agregado correctamente" << RESET << endl;
+        system("pause>null");
+
         fflush(stdin);
     }
 
@@ -354,9 +357,6 @@ void verClientes()
     system("pause");
 }
 
-/////////////////////////////////////////////////
-/////////////////////Genesis////////////////////
-
 void agregarPago()
 {
 
@@ -423,7 +423,7 @@ void agregarPago()
                     }
 
                     cout << GREEN << "\nPago agregado correctamente" << RESET << endl;
-                    system("pause");
+                    system("pause>null");
                     break;
                 }
 
@@ -522,9 +522,6 @@ void verPago()
 
     system("pause");
 }
-
-/////////////////////////////////////////////////
-/////////////////////Fin////////////////////////
 
 bool validarUsuario()
 {
