@@ -57,6 +57,8 @@ void correlativo();
 void seccionCliente();
 void ingresarClientes();
 bool validarCliente(char[]);
+void formatoNombre();
+void formatoApellido();
 bool validarDui(char[]);
 void verClientes();
 void gotoxy(int, int);
@@ -230,7 +232,6 @@ void menuPrincipal()
 
 void ingresarClientes()
 {
-
     FILE *archivo = fopen(Registro.c_str(), "ab");
 
     if (archivo != NULL)
@@ -243,7 +244,8 @@ void ingresarClientes()
         do
         {
             cout << "Ingrese los nombres del cliente: ";
-            cin.getline(cliente.nombres, MAX_CLIENT);
+            cin.getline(cliente.nombres, MAX_LENGTH);
+            formatoNombre();
 
         } while (!validarCliente(cliente.nombres));
 
@@ -252,7 +254,8 @@ void ingresarClientes()
         do
         {
             cout << "Ingrese los apellidos del cliente: ";
-            cin.getline(cliente.apellidos, MAX_CLIENT);
+            cin.getline(cliente.apellidos, MAX_LENGTH);
+            formatoApellido();
 
         } while (!validarCliente(cliente.apellidos));
 
@@ -526,6 +529,10 @@ bool validarUsuario()
 
 bool validarCliente(char cliente[])
 {
+    if (strlen(cliente) <= 0)
+    {
+        return false;
+    }
     for (int i = 0; i < strlen(cliente); i++)
     {
         if (!((cliente[i] >= 'A' && cliente[i] <= 'Z') ||
@@ -535,6 +542,41 @@ bool validarCliente(char cliente[])
         }
     }
     return true;
+}
+
+void formatoNombre()
+{
+    char cadena[MAX_LENGTH];
+    char *auxiliar;
+
+    strcpy(cadena, cliente.nombres);
+    strcpy(cliente.nombres, "");
+
+    auxiliar = strtok(cadena, " ");
+
+    while (auxiliar != NULL)
+    {
+        strcat(cliente.nombres, auxiliar);
+        strcat(cliente.nombres, " ");
+        auxiliar = strtok(NULL, " ");
+    }
+}
+
+void formatoApellido()
+{
+    char cadena[MAX_LENGTH];
+    char *auxiliar;
+
+    strcpy(cadena, cliente.apellidos);
+    strcpy(cliente.apellidos, "");
+    auxiliar = strtok(cadena, " ");
+
+    while (auxiliar != NULL)
+    {
+        strcat(cliente.apellidos, auxiliar);
+        strcat(cliente.apellidos, " ");
+        auxiliar = strtok(NULL, " ");
+    }
 }
 
 bool validarDui(char dui[])
