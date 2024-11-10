@@ -62,6 +62,8 @@ void validarMayusculas();
 bool validarCliente(char[]);
 void formatoNombre();
 void formatoApellido();
+void ingresoNombre();
+void ingresoApellido();
 bool validarDui(char[]);
 bool verificarUsuario(bool);
 bool comprobarPassword();
@@ -277,35 +279,20 @@ void ingresarClientes()
 
         fflush(stdin);
 
-        do
-        {
-            cout << "Ingrese los nombres del cliente: ";
-            cin.getline(cliente.nombres, MAX_LENGTH);
-            formatoNombre();
-
-        } while (!validarCliente(cliente.nombres));
+        ingresoNombre();
 
         fflush(stdin);
 
-        do
-        {
-            cout << "Ingrese los apellidos del cliente: ";
-            cin.getline(cliente.apellidos, MAX_LENGTH);
-            formatoApellido();
-
-        } while (!validarCliente(cliente.apellidos));
-
+        ingresoApellido();
         validarMayusculas();
 
         fflush(stdin);
-
         do
         {
             cout << "Ingrese el DUI del cliente: ";
             cin.getline(cliente.dui, 11);
 
         } while (!validarDui(cliente.dui));
-
         cliente.pago = false;
 
         fwrite(&cliente, sizeof(Clientes), 1, archivo);
@@ -595,24 +582,12 @@ void editarCliente()
                 switch (edicion)
                 {
                 case 1:
-                    do
-                    {
-                        cout << "Ingrese los nombres del cliente: ";
-                        cin.getline(cliente.nombres, MAX_LENGTH);
-                        formatoNombre();
-
-                    } while (!validarCliente(cliente.nombres));
+                    ingresoNombre();
                     validarMayusculas();
                     strcpy(i->nombres, cliente.nombres);
                     break;
                 case 2:
-                    do
-                    {
-                        cout << "Ingrese los apellidos del cliente: ";
-                        cin.getline(cliente.apellidos, MAX_LENGTH);
-                        formatoApellido();
-
-                    } while (!validarCliente(cliente.apellidos));
+                    ingresoApellido();
                     validarMayusculas();
                     strcpy(i->apellidos, cliente.apellidos);
                     break;
@@ -699,6 +674,28 @@ void formatoApellido()
         strcat(cliente.apellidos, " ");
         auxiliar = strtok(NULL, " ");
     }
+}
+
+void ingresoNombre()
+{
+    do
+    {
+        cout << "Ingrese los nombres del cliente: ";
+        cin.getline(cliente.nombres, MAX_LENGTH);
+        formatoNombre();
+
+    } while (!validarCliente(cliente.nombres));
+}
+
+void ingresoApellido()
+{
+    do
+    {
+        cout << "Ingrese los apellidos del cliente: ";
+        cin.getline(cliente.apellidos, MAX_LENGTH);
+        formatoApellido();
+
+    } while (!validarCliente(cliente.apellidos));
 }
 
 void validarMayusculas()
