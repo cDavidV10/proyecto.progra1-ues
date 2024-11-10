@@ -112,7 +112,7 @@ void iniciarSesion()
         cout << "------     INICIAR SESION     ------" << endl;
         cout << "Usuario: ";
         cin.getline(usuario.usuario, 20);
-        cout << "Password: ";
+        cout << "Contrase" << (char)164 << "a: ";
         password();
 
         if (verificarUsuario(true))
@@ -156,7 +156,7 @@ void crearCuenta()
 
     do
     {
-        cout << "Password: ";
+        cout << "Contrase" << (char)164 << "a: ";
         password();
 
         if (!comprobarPassword())
