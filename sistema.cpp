@@ -13,12 +13,12 @@ const int ENTER = 13;
 const int BACKSPACE = 8;
 const string RUTA_USUARIOS = "usuarios.bin";
 const string RUTA_REGISTRO = "registro.bin";
+const string RUTA_CLIENTE = "clientes.bin";
 
 const string RED = "\033[1;31m";
 const string GREEN = "\033[1;32m";
 const string RESET = "\033[0m";
 const int MAX_CLIENT = 50;
-const string Registro = "clientes.bin";
 
 struct Clientes
 {
@@ -42,27 +42,33 @@ struct RegistroPago
 
 int loginOpcion = 0;
 int menuOpcion = 0;
+int manteOpcion = 0;
+
+vector<Clientes> clientesAux;
 
 void login();
 void iniciarSesion();
 void crearCuenta();
-bool verificarUsuario(bool);
-bool comprobarPassword();
-bool validarUsuario();
-void password();
-int leer();
 void menuPrincipal();
+void mantenimiento();
+void ingresarClientes();
+void verClientes();
 void agregarPago();
 void verPago();
 void correlativo();
 void seccionCliente();
-void ingresarClientes();
+void editarCliente();
 void validarMayusculas();
 bool validarCliente(char[]);
 void formatoNombre();
 void formatoApellido();
 bool validarDui(char[]);
-void verClientes();
+bool verificarUsuario(bool);
+bool comprobarPassword();
+bool validarUsuario();
+void getSizeClientes();
+void password();
+int leer();
 void gotoxy(int, int);
 
 int main(int argc, char const *argv[])
@@ -202,7 +208,8 @@ void menuPrincipal()
         cout << "2. Agregar Pago" << endl;
         cout << "3. Ver Clientes" << endl;
         cout << "4. Ver Pago" << endl;
-        cout << "5. Salir" << endl;
+        cout << "5. Mantenimiento" << endl;
+        cout << "6. Salir" << endl;
         cout << "Seleccione una opcion del menu: ";
         menuOpcion = leer();
 
@@ -224,17 +231,44 @@ void menuPrincipal()
         case 4:
             verPago();
             break;
+        case 5:
+            mantenimiento();
+            break;
 
         default:
             break;
         }
 
-    } while (menuOpcion != 5);
+    } while (menuOpcion != 6);
+}
+
+void mantenimiento()
+{
+    do
+    {
+        system("cls");
+        cout << "------     MANTENIMIENTO     ------" << endl;
+        cout << "1. Editar Cliente" << endl;
+        cout << "2. Eliminar Cliente" << endl;
+        cout << "3. Salir" << endl;
+        cout << "Seleccione una opcion: ";
+        manteOpcion = leer();
+
+        switch (manteOpcion)
+        {
+        case 1:
+            editarCliente();
+            break;
+
+        default:
+            break;
+        }
+    } while (manteOpcion != 3);
 }
 
 void ingresarClientes()
 {
-    FILE *archivo = fopen(Registro.c_str(), "ab");
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "ab");
 
     if (archivo != NULL)
     {
@@ -297,7 +331,7 @@ void verClientes()
     int i = 0;
     Clientes cliente;
 
-    FILE *archivo = fopen(Registro.c_str(), "rb");
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "rb");
 
     if (archivo != NULL)
     {
@@ -370,7 +404,7 @@ void agregarPago()
     char duiCliente[11];
     double pago;
 
-    FILE *archivoClientes = fopen(Registro.c_str(), "rb");
+    FILE *archivoClientes = fopen(RUTA_CLIENTE.c_str(), "rb");
     FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "ab");
 
     if (archivoClientes != NULL && archivoPagos != NULL)
@@ -415,7 +449,7 @@ void agregarPago()
                     clientes[i].pago = true;
 
                     fclose(archivoClientes);
-                    archivoClientes = fopen(Registro.c_str(), "wb");
+                    archivoClientes = fopen(RUTA_CLIENTE.c_str(), "wb");
 
                     for (int j = 0; j < numClientes; j++)
                     {
@@ -461,7 +495,7 @@ void verPago()
     system("cls");
     cout << "------     VER PAGO     ------" << endl;
 
-    FILE *archivoClientes = fopen(Registro.c_str(), "rb");
+    FILE *archivoClientes = fopen(RUTA_CLIENTE.c_str(), "rb");
     FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "rb");
 
     if (archivoClientes != NULL && archivoPagos != NULL)
@@ -521,6 +555,93 @@ void verPago()
     }
 
     system("pause");
+}
+
+void editarCliente()
+{
+    bool clienteEncontrado = false;
+    char dui[11];
+    int edicion = 0;
+    Clientes temp;
+    system("cls");
+
+    cin.ignore();
+
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
+    getSizeClientes();
+
+    do
+    {
+        cout << "Ingrese el DUI del cliente: ";
+        cin.getline(dui, 11);
+
+    } while (!validarDui(dui));
+
+    if (archivo != NULL)
+    {
+        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+        {
+            if (strcmp(i->dui, dui) == 0)
+            {
+                gotoxy(0, 1);
+                cout << i->nombres << " " << i->apellidos << endl;
+                clienteEncontrado = true;
+                cout << "Que desea Editar" << endl;
+                cout << "1. Nombre" << endl;
+                cout << "2. Apellidos" << endl;
+                cout << "Seleccione una opcion: ";
+                edicion = leer();
+                cin.ignore();
+                switch (edicion)
+                {
+                case 1:
+                    do
+                    {
+                        cout << "Ingrese los nombres del cliente: ";
+                        cin.getline(cliente.nombres, MAX_LENGTH);
+                        formatoNombre();
+
+                    } while (!validarCliente(cliente.nombres));
+                    validarMayusculas();
+                    strcpy(i->nombres, cliente.nombres);
+                    break;
+                case 2:
+                    do
+                    {
+                        cout << "Ingrese los apellidos del cliente: ";
+                        cin.getline(cliente.apellidos, MAX_LENGTH);
+                        formatoApellido();
+
+                    } while (!validarCliente(cliente.apellidos));
+                    validarMayusculas();
+                    strcpy(i->apellidos, cliente.apellidos);
+                    break;
+
+                default:
+                    break;
+                }
+                break;
+            }
+        }
+
+        if (!clienteEncontrado)
+        {
+            cout << RED << "Cliente no encontrado" << RESET << endl;
+            system("pause>null");
+            fclose(archivo);
+            return;
+        }
+
+        fseek(archivo, 0, SEEK_SET);
+        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+        {
+            fwrite(&(*i), sizeof(Clientes), 1, archivo);
+        }
+    }
+    fclose(archivo);
+    clientesAux.clear();
+    cout << GREEN << "Datos actualizados correctamente" << RESET;
+    system("pause>null");
 }
 
 bool validarUsuario()
@@ -730,6 +851,24 @@ bool verificarUsuario(bool verificarPass)
     }
 
     return false;
+}
+
+void getSizeClientes()
+{
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "rb");
+    Clientes temp;
+    if (archivo != NULL)
+    {
+        while (!feof(archivo))
+        {
+            fread(&temp, sizeof(Clientes), 1, archivo);
+            if (!feof(archivo))
+            {
+                clientesAux.push_back(temp);
+            }
+        }
+    }
+    fclose(archivo);
 }
 
 void password()
