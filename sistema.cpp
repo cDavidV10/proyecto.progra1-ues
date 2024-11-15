@@ -64,6 +64,7 @@ void formatoNombre();
 void formatoApellido();
 void ingresoNombre();
 void ingresoApellido();
+bool duiExiste(char[]);
 bool validarDui(char[]);
 bool verificarUsuario(bool);
 bool comprobarPassword();
@@ -292,7 +293,12 @@ void ingresarClientes()
             cout << "Ingrese el DUI del cliente: ";
             cin.getline(cliente.dui, 11);
 
-        } while (!validarDui(cliente.dui));
+            if (duiExiste(cliente.dui))
+            {
+                cout << RED << "El dui ya esta registrado" << RESET << endl;
+            }
+
+        } while (!validarDui(cliente.dui) || duiExiste(cliente.dui));
         cliente.pago = false;
 
         fwrite(&cliente, sizeof(Clientes), 1, archivo);
@@ -654,8 +660,11 @@ void formatoNombre()
     while (auxiliar != NULL)
     {
         strcat(cliente.nombres, auxiliar);
-        strcat(cliente.nombres, " ");
         auxiliar = strtok(NULL, " ");
+        if (auxiliar != NULL)
+        {
+            strcat(cliente.nombres, " ");
+        }
     }
 }
 
@@ -767,6 +776,31 @@ bool validarDui(char dui[])
             return true;
         }
     }
+    return false;
+}
+
+bool duiExiste(char dui[])
+{
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "rb");
+
+    if (archivo != NULL)
+    {
+        Clientes clienteAux;
+
+        while (!feof(archivo))
+        {
+            fread(&clienteAux, sizeof(Clientes), 1, archivo);
+            if (!feof(archivo))
+            {
+                if (strcmp(cliente.dui, dui) == 0)
+                {
+                    fclose(archivo);
+                    return true;
+                }
+            }
+        }
+    }
+    fclose(archivo);
     return false;
 }
 
