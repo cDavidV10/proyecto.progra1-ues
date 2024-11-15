@@ -24,7 +24,7 @@ struct Clientes
 {
     char nombres[MAX_CLIENT];
     char apellidos[MAX_CLIENT];
-    char dui[11];
+    char dui[100];
     bool pago;
 } cliente;
 
@@ -58,6 +58,7 @@ void verPago();
 void correlativo();
 void seccionCliente();
 void editarCliente();
+void eliminarCliente();
 void validarMayusculas();
 bool validarCliente(char[]);
 void formatoNombre();
@@ -262,6 +263,9 @@ void mantenimiento()
         case 1:
             editarCliente();
             break;
+        case 2:
+            eliminarCliente();
+            break;
 
         default:
             break;
@@ -291,11 +295,15 @@ void ingresarClientes()
         do
         {
             cout << "Ingrese el DUI del cliente: ";
-            cin.getline(cliente.dui, 11);
+            cin.getline(cliente.dui, 100);
 
             if (duiExiste(cliente.dui))
             {
                 cout << RED << "El dui ya esta registrado" << RESET << endl;
+            }
+            else if (!validarDui(cliente.dui))
+            {
+                cout << RED << "DUI invalido" << RESET << endl;
             }
 
         } while (!validarDui(cliente.dui) || duiExiste(cliente.dui));
@@ -394,7 +402,7 @@ void agregarPago()
     system("cls");
     cout << "------     PAGO    ------" << endl;
 
-    char duiCliente[11];
+    char duiCliente[100];
     double pago;
 
     FILE *archivoClientes = fopen(RUTA_CLIENTE.c_str(), "rb");
@@ -423,7 +431,7 @@ void agregarPago()
         }
 
         cout << "Ingrese el DUI del cliente: ";
-        cin.getline(duiCliente, 11);
+        cin.getline(duiCliente, 100);
 
         for (int i = 0; i < numClientes; i++)
         {
@@ -553,7 +561,7 @@ void verPago()
 void editarCliente()
 {
     bool clienteEncontrado = false;
-    char dui[11];
+    char dui[100];
     int edicion = 0;
     Clientes temp;
     system("cls");
@@ -566,7 +574,7 @@ void editarCliente()
     do
     {
         cout << "Ingrese el DUI del cliente: ";
-        cin.getline(dui, 11);
+        cin.getline(dui, 100);
 
     } while (!validarDui(dui));
 
@@ -619,6 +627,76 @@ void editarCliente()
             fwrite(&(*i), sizeof(Clientes), 1, archivo);
         }
     }
+    fclose(archivo);
+    clientesAux.clear();
+    cout << GREEN << "Datos actualizados correctamente" << RESET;
+    system("pause>null");
+}
+
+void eliminarCliente()
+{
+    bool clienteEncontrado = false;
+    char dui[100];
+    int edicion = 0;
+    system("cls");
+
+    cin.ignore();
+
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
+    getSizeClientes();
+
+    do
+    {
+        cout << "Ingrese el DUI del cliente: ";
+        cin.getline(dui, 100);
+
+    } while (!validarDui(dui));
+
+    if (archivo != NULL)
+    {
+        for (auto i = clientesAux.begin(); i != clientesAux.end();)
+        {
+            if (strcmp(i->dui, dui) == 0)
+            {
+                clienteEncontrado = true;
+                cout << "Esta seguro de eliminar el cliente? (si->1, no->0): " << endl;
+                edicion = leer();
+                cin.ignore();
+
+                if (edicion == 0)
+                {
+                    fclose(archivo);
+                    return;
+                }
+                else
+                {
+
+                    i = clientesAux.erase(i);
+                }
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        if (!clienteEncontrado)
+        {
+            cout << RED << "Cliente no encontrado" << RESET << endl;
+            system("pause>null");
+            fclose(archivo);
+            return;
+        }
+
+        fseek(archivo, 0, SEEK_SET);
+        ftruncate(fileno(archivo), 0);
+
+        for (auto &cliente : clientesAux)
+        {
+            fwrite(&cliente, sizeof(Clientes), 1, archivo);
+        }
+    }
+
     fclose(archivo);
     clientesAux.clear();
     cout << GREEN << "Datos actualizados correctamente" << RESET;
@@ -792,7 +870,7 @@ bool duiExiste(char dui[])
             fread(&clienteAux, sizeof(Clientes), 1, archivo);
             if (!feof(archivo))
             {
-                if (strcmp(cliente.dui, dui) == 0)
+                if (strcmp(clienteAux.dui, dui) == 0)
                 {
                     fclose(archivo);
                     return true;
