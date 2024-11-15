@@ -9,6 +9,7 @@
 
 using namespace std;
 const int MAX_LENGTH = 30; // Cambie el tamano de 20 a 30
+const int MAX_ADDRESS = 200;
 const int ENTER = 13;
 const int BACKSPACE = 8;
 const string RUTA_USUARIOS = "usuarios.bin";
@@ -20,10 +21,21 @@ const string GREEN = "\033[1;32m";
 const string RESET = "\033[0m";
 const int MAX_CLIENT = 50;
 
+struct Direccion
+{
+    char zona[MAX_LENGTH];
+    char via[MAX_LENGTH];
+    int numCasa;
+    char distrito[MAX_LENGTH];
+    char depto[MAX_LENGTH];
+    char completa[MAX_ADDRESS];
+};
+
 struct Clientes
 {
     char nombres[MAX_CLIENT];
     char apellidos[MAX_CLIENT];
+    Direccion direccion;
     char dui[100];
     bool pago;
 } cliente;
@@ -74,6 +86,14 @@ void getSizeClientes();
 void password();
 int leer();
 void gotoxy(int, int);
+
+void ingresarDireccion();
+void formatoZona();
+void formatoVia();
+void formatoDistrito();
+void formatoDepto();
+void validarMayusDireccion(char[]);
+void concatenarDireccion(int, int);
 
 int main(int argc, char const *argv[])
 {
@@ -275,7 +295,8 @@ void mantenimiento()
 
 void ingresarClientes()
 {
-    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "ab");
+    bool isEncontrado = false;
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
 
     if (archivo != NULL)
     {
@@ -289,9 +310,37 @@ void ingresarClientes()
         fflush(stdin);
 
         ingresoApellido();
+
+        fflush(stdin);
+
+        do
+        {
+            ingresarDireccion();
+            getSizeClientes();
+
+            char aux[MAX_ADDRESS];
+
+            strcpy(aux, cliente.direccion.completa);
+
+            for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+            {
+                isEncontrado = false;
+                if (strcmp(i->direccion.completa, aux) == 0)
+                {
+                    cout << RED << "[ADVERTENCIA]: No puede ingresar dos veces la misma direccion. Intente de nuevo." << RESET << endl;
+                    isEncontrado = true;
+                    system("pause");
+                }
+            }
+
+        } while (isEncontrado);
+
+        fflush(stdin);
+
         validarMayusculas();
 
         fflush(stdin);
+
         do
         {
             cout << "Ingrese el DUI del cliente: ";
@@ -309,7 +358,13 @@ void ingresarClientes()
         } while (!validarDui(cliente.dui) || duiExiste(cliente.dui));
         cliente.pago = false;
 
-        fwrite(&cliente, sizeof(Clientes), 1, archivo);
+        clientesAux.push_back(cliente);
+
+        fseek(archivo, 0, SEEK_SET);
+        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+        {
+            fwrite(&(*i), sizeof(Clientes), 1, archivo);
+        }
 
         cout << GREEN << "Cliente agregado correctamente" << RESET << endl;
         system("pause>null");
@@ -321,7 +376,7 @@ void ingresarClientes()
     {
         cout << RED << "[ERROR]: Creacion de archivo invalida." << RESET; // le agregue color
     }
-
+    clientesAux.clear();
     fclose(archivo);
 }
 
@@ -699,7 +754,7 @@ void eliminarCliente()
 
     fclose(archivo);
     clientesAux.clear();
-    cout << GREEN << "Datos actualizados correctamente" << RESET;
+    cout << GREEN << "Datos eliminado correctamente" << RESET;
     system("pause>null");
 }
 
@@ -763,6 +818,94 @@ void formatoApellido()
     }
 }
 
+void formatoZona()
+{
+    char cadena[MAX_LENGTH];
+    char *auxiliar;
+
+    strcpy(cadena, cliente.direccion.zona);
+    strcpy(cliente.direccion.zona, "");
+
+    auxiliar = strtok(cadena, " ");
+
+    while (auxiliar != NULL)
+    {
+        strcat(cliente.direccion.zona, auxiliar);
+        auxiliar = strtok(NULL, " ");
+
+        if (auxiliar != NULL)
+        {
+            strcat(cliente.direccion.zona, " ");
+        }
+    }
+}
+
+void formatoVia()
+{
+    char cadena[MAX_LENGTH];
+    char *auxiliar;
+
+    strcpy(cadena, cliente.direccion.via);
+    strcpy(cliente.direccion.via, "");
+
+    auxiliar = strtok(cadena, " ");
+
+    while (auxiliar != NULL)
+    {
+        strcat(cliente.direccion.via, auxiliar);
+        auxiliar = strtok(NULL, " ");
+
+        if (auxiliar != NULL)
+        {
+            strcat(cliente.direccion.via, " ");
+        }
+    }
+}
+
+void formatoDistrito()
+{
+    char cadena[MAX_LENGTH];
+    char *auxiliar;
+
+    strcpy(cadena, cliente.direccion.distrito);
+    strcpy(cliente.direccion.distrito, "");
+
+    auxiliar = strtok(cadena, " ");
+
+    while (auxiliar != NULL)
+    {
+        strcat(cliente.direccion.distrito, auxiliar);
+        auxiliar = strtok(NULL, " ");
+
+        if (auxiliar != NULL)
+        {
+            strcat(cliente.direccion.distrito, " ");
+        }
+    }
+}
+
+void formatoDepto()
+{
+    char cadena[MAX_LENGTH];
+    char *auxiliar;
+
+    strcpy(cadena, cliente.direccion.depto);
+    strcpy(cliente.direccion.depto, "");
+
+    auxiliar = strtok(cadena, " ");
+
+    while (auxiliar != NULL)
+    {
+        strcat(cliente.direccion.depto, auxiliar);
+        auxiliar = strtok(NULL, " ");
+
+        if (auxiliar != NULL)
+        {
+            strcat(cliente.direccion.depto, " ");
+        }
+    }
+}
+
 void ingresoNombre()
 {
     do
@@ -783,6 +926,361 @@ void ingresoApellido()
         formatoApellido();
 
     } while (!validarCliente(cliente.apellidos));
+}
+
+void ingresarDireccion()
+{
+    int op;
+    int cont = 1;
+    bool isReal = false;
+    bool isEspacio = true;
+    bool isEncontrado = false;
+    char aux[MAX_LENGTH];
+    char deptos[15][MAX_LENGTH] = {{"AHUACHAPAN"}, {"SONSONATE"}, {"SANTA ANA"}, {"LA LIBERTAD"}, {"CHALATENANGO"}, {"SAN SALVADOR"}, {"CUSCATLAN"}, {"LA PAZ"}, {"SAN VICENTE"}, {"CABANIAS"}, {"CABANAS"}, {"USULUTAN"}, {"SAN MIGUEL"}, {"MORAZAN"}, {"LA UNION"}};
+
+    do
+    {
+        system("cls");
+        gotoxy(30, 0);
+        cout << "Ingrese la direccion del cliente." << endl;
+        gotoxy(10, 2);
+        cout << "Estas en la seccion: [" << GREEN << "Zona" << RESET << ", Via, No.Casa, Distrito, Departamento]\n";
+        gotoxy(0, 4);
+        cout << "Seleccione el formato de su direccion: " << endl;
+        gotoxy(0, 6);
+        cout << "1. Colonia." << endl;
+        cout << "2. Barrio." << endl;
+        cout << "3. Urbanizacion." << endl;
+        cout << "4. Sector." << endl;
+        gotoxy(0, 11);
+        cout << "Opcion: ";
+        op = leer();
+    } while (op <= 0 || op >= 5);
+
+    fflush(stdin);
+
+    do
+    {
+        switch (op)
+        {
+        case 1:
+            cout << "Ingrese el nombre de la colonia: ";
+            cin.getline(cliente.direccion.zona, MAX_ADDRESS);
+            break;
+
+        case 2:
+            cout << "Ingrese el nombre del barrio: ";
+            cin.getline(cliente.direccion.zona, MAX_ADDRESS);
+            break;
+
+        case 3:
+            cout << "Ingrese el nombre de la urbanizacion: ";
+            cin.getline(cliente.direccion.zona, MAX_ADDRESS);
+            break;
+
+        case 4:
+            cout << "Ingrese el nombre del sector: ";
+            cin.getline(cliente.direccion.zona, MAX_ADDRESS);
+            break;
+        }
+
+        formatoZona();
+
+    } while (!validarCliente(cliente.direccion.zona));
+
+    validarMayusDireccion(cliente.direccion.zona);
+
+    concatenarDireccion(op, cont);
+
+    fflush(stdin);
+
+    do
+    {
+        system("cls");
+        gotoxy(10, 0);
+        cout << "Estas en la seccion: [Zona, " << GREEN << "Via" << RESET << ", No.Casa, Distrito, Departamento]\n";
+        gotoxy(0, 2);
+        cout << "Seleccione el formato de su direccion: " << endl;
+        cout << "\n1. Calle." << endl;
+        cout << "2. Boulevard." << endl;
+        cout << "3. Paseo." << endl;
+        cout << "4. Autopista." << endl;
+        cout << "5. Carretera." << endl;
+        cout << "6. Calle Principal." << endl;
+        cout << "7. Via." << endl;
+        gotoxy(0, 12);
+        cout << "Opcion: ";
+        op = leer();
+    } while (op <= 0 || op >= 8);
+
+    fflush(stdin);
+
+    do
+    {
+        switch (op)
+        {
+        case 1:
+            cout << "Ingrese el nombre de la calle: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+
+        case 2:
+            cout << "Ingrese el nombre del boulevard: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+
+        case 3:
+            cout << "Ingrese el nombre de la paseo: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+
+        case 4:
+            cout << "Ingrese el nombre de la autopista: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+
+        case 5:
+            cout << "Ingrese el nombre de la carretera: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+
+        case 6:
+            cout << "Ingrese el nombre de la calle principal: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+
+        case 7:
+            cout << "Ingrese el nombre de la via: ";
+            cin.getline(cliente.direccion.via, MAX_ADDRESS);
+            break;
+        }
+
+        formatoVia();
+
+    } while (!validarCliente(cliente.direccion.via));
+
+    cont++; // 2
+
+    validarMayusDireccion(cliente.direccion.via);
+
+    concatenarDireccion(op, cont);
+
+    system("cls");
+
+    fflush(stdin);
+
+    gotoxy(10, 0);
+    cout << "Estas en la seccion: [Zona, Via, " << GREEN << "No.Casa" << RESET << ", Distrito, Departamento]\n";
+
+    cout << "\nIngrese el numero de casa: #";
+    cliente.direccion.numCasa = leer();
+
+    cont++; // 3
+
+    concatenarDireccion(op, cont);
+
+    fflush(stdin);
+
+    do
+    {
+        system("cls");
+        gotoxy(10, 0);
+        cout << "Estas en la seccion: [Zona, Via, No.Casa, " << GREEN << "Distrito" << RESET << ", Departamento]\n";
+        cout << "\nIngrese el distrito: ";
+        cin.getline(cliente.direccion.distrito, MAX_ADDRESS);
+
+        formatoDistrito();
+
+    } while (!validarCliente(cliente.direccion.distrito));
+
+    cont++; // 4
+
+    validarMayusDireccion(cliente.direccion.distrito);
+
+    concatenarDireccion(op, cont);
+
+    do
+    {
+        do
+        {
+            system("cls");
+            gotoxy(10, 0);
+            cout << "Estas en la seccion: [Zona, Via, No.Casa, Distrito, " << GREEN << "Departamento" << RESET << "]\n";
+            cout << "\nIngrese el departamento: ";
+            cin.getline(cliente.direccion.depto, MAX_ADDRESS);
+
+        } while (!validarCliente(cliente.direccion.depto));
+
+        formatoDepto();
+
+        /////////////////// Mayusculas //////////////////////
+
+        strcpy(aux, cliente.direccion.depto);
+
+        for (int i = 0; i < strlen(cliente.direccion.depto); i++)
+        {
+            aux[i] = toupper(cliente.direccion.depto[i]);
+        }
+
+        /////////////////////////////////////////////////////
+
+        for (int i = 0; i < 14; i++)
+        {
+            if (strcmp(aux, deptos[i]) == 0)
+            {
+                isReal = true;
+                break;
+            }
+        }
+
+    } while (!isReal);
+
+    cont++; // 5
+
+    validarMayusDireccion(cliente.direccion.depto);
+
+    concatenarDireccion(op, cont);
+
+    fflush(stdin);
+}
+
+void concatenarDireccion(int num, int cont)
+{
+    char zona[4][MAX_LENGTH] = {{"Col. "}, {"Barr. "}, {"Urb. "}, {"Sect. "}};
+    char via[7][MAX_LENGTH] = {{"C. "}, {"Blvd. "}, {"Pso. "}, {"Autop. "}, {"Carr. "}, {"C. Ppal."}, {"Via "}};
+
+    if (cont == 1)
+    {
+        switch (num)
+        {
+        case 1:
+            strcat(cliente.direccion.completa, zona[0]);
+            strcat(cliente.direccion.completa, cliente.direccion.zona);
+            break;
+
+        case 2:
+            strcat(cliente.direccion.completa, zona[1]);
+            strcat(cliente.direccion.completa, cliente.direccion.zona);
+            break;
+
+        case 3:
+            strcat(cliente.direccion.completa, zona[2]);
+            strcat(cliente.direccion.completa, cliente.direccion.zona);
+            break;
+
+        case 4:
+            strcat(cliente.direccion.completa, zona[3]);
+            strcat(cliente.direccion.completa, cliente.direccion.zona);
+            break;
+        }
+
+        return;
+    }
+
+    if (cont == 2)
+    {
+        switch (num)
+        {
+        case 1:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[0]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+
+        case 2:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[1]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+
+        case 3:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[2]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+
+        case 4:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[3]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+
+        case 5:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[4]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+
+        case 6:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[5]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+
+        case 7:
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, via[6]);
+            strcat(cliente.direccion.completa, cliente.direccion.via);
+            break;
+        }
+
+        return;
+    }
+
+    if (cont == 3)
+    {
+        strcat(cliente.direccion.completa, ", Casa #");
+        string num = to_string(cliente.direccion.numCasa);
+        strcat(cliente.direccion.completa, num.c_str());
+
+        return;
+    }
+
+    if (cont == 4)
+    {
+        strcat(cliente.direccion.completa, ", ");
+        strcat(cliente.direccion.completa, cliente.direccion.distrito);
+
+        return;
+    }
+
+    if (cont == 5)
+    {
+        strcat(cliente.direccion.completa, ", ");
+        strcat(cliente.direccion.completa, cliente.direccion.depto);
+
+        return;
+    }
+}
+
+void validarMayusDireccion(char direccion[])
+{
+    bool isEspacio = false;
+
+    if (islower(direccion[0]))
+    {
+        direccion[0] = toupper(direccion[0]);
+    }
+
+    for (int i = 1; i < strlen(direccion); i++)
+    {
+        isEspacio = true;
+
+        if (direccion[i - 1] == ' ' && islower(direccion[i]))
+        {
+            direccion[i] = toupper(direccion[i]);
+            isEspacio = false;
+        }
+        else if (direccion[i - 1] == ' ' && isupper(direccion[i]))
+        {
+            isEspacio = false;
+        }
+
+        if (i > 0 && isupper(direccion[i]) && isEspacio)
+        {
+            direccion[i] = tolower(direccion[i]);
+        }
+    }
 }
 
 void validarMayusculas()
@@ -878,6 +1376,7 @@ bool duiExiste(char dui[])
             }
         }
     }
+
     fclose(archivo);
     return false;
 }
