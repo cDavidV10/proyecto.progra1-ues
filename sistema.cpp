@@ -55,6 +55,7 @@ struct RegistroPago
 int loginOpcion = 0;
 int menuOpcion = 0;
 int manteOpcion = 0;
+int opcion = 0;
 
 vector<Clientes> clientesAux;
 
@@ -63,13 +64,18 @@ void iniciarSesion();
 void crearCuenta();
 void menuPrincipal();
 void mantenimiento();
+void menuMantenimiento();
+void editar();
 void ingresarClientes();
 void verClientes();
 void agregarPago();
 void verPago();
 void correlativo();
 void seccionCliente();
-void editarCliente();
+void busquedaDui();
+void busquedaNombre();
+void busquedaApellido();
+void edicion(vector<Clientes> &, int);
 void eliminarCliente();
 void validarMayusculas();
 bool validarCliente(char[]);
@@ -281,7 +287,7 @@ void mantenimiento()
         switch (manteOpcion)
         {
         case 1:
-            editarCliente();
+            editar();
             break;
         case 2:
             eliminarCliente();
@@ -291,6 +297,42 @@ void mantenimiento()
             break;
         }
     } while (manteOpcion != 3);
+}
+
+void menuMantenimiento()
+{
+    system("cls");
+    cout << "-----    BUSQUEDA DE CLIENTES POR    -----" << endl;
+    cout << "1. DUI" << endl;
+    cout << "2. Nombres" << endl;
+    cout << "3. Apellidos" << endl;
+    cout << "4. Salir" << endl;
+    cout << "Seleccione una opcion: ";
+    opcion = leer();
+}
+
+void editar()
+{
+    do
+    {
+        menuMantenimiento();
+
+        switch (opcion)
+        {
+        case 1:
+            busquedaDui();
+            break;
+        case 2:
+            busquedaNombre();
+            break;
+        case 3:
+            busquedaApellido();
+            break;
+
+        default:
+            break;
+        }
+    } while (opcion != 4);
 }
 
 void ingresarClientes()
@@ -606,7 +648,7 @@ void verPago()
     system("pause");
 }
 
-void editarCliente()
+void busquedaDui()
 {
     bool clienteEncontrado = false;
     char dui[100];
@@ -632,7 +674,6 @@ void editarCliente()
         {
             if (strcmp(i->dui, dui) == 0)
             {
-                gotoxy(0, 1);
                 cout << i->nombres << " " << i->apellidos << endl;
                 clienteEncontrado = true;
                 cout << "Que desea Editar" << endl;
@@ -679,6 +720,165 @@ void editarCliente()
     clientesAux.clear();
     cout << GREEN << "Datos actualizados correctamente" << RESET;
     system("pause>null");
+}
+
+void busquedaNombre()
+{
+    char nombre[MAX_CLIENT];
+    int posicion = 0, lista = 1;
+    Clientes temp;
+    system("cls");
+
+    cin.ignore();
+
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
+    getSizeClientes();
+    vector<int> posiciones;
+
+    ingresoNombre();
+
+    if (archivo != NULL)
+    {
+        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+        {
+            if (strcmp(i->nombres, cliente.nombres) == 0)
+            {
+                cout << lista << ". " << i->dui << " " << i->nombres << " " << i->apellidos << endl;
+                lista++;
+                posiciones.push_back(posicion);
+            }
+            posicion++;
+        }
+
+        if (posiciones.empty())
+        {
+            cout << RED << "No hay clientes registrados con ese nombre" << RESET << endl;
+            fclose(archivo);
+            system("pause>null");
+            clientesAux.clear();
+            return;
+        }
+        else
+        {
+            cout << "0. Salir" << endl;
+            cout << "Seleccione el usuario a editar: ";
+            posicion = leer();
+
+            if (posicion == 0)
+            {
+                fclose(archivo);
+                clientesAux.clear();
+                return;
+            }
+
+            posicion = posiciones[posicion - 1];
+
+            edicion(clientesAux, posicion);
+
+            fseek(archivo, 0, SEEK_SET);
+            for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+            {
+                fwrite(&(*i), sizeof(Clientes), 1, archivo);
+            }
+        }
+    }
+
+    fclose(archivo);
+    clientesAux.clear();
+    cout << GREEN << "Datos actualizados correctamente" << RESET;
+    system("pause>null");
+}
+
+void busquedaApellido()
+{
+    char nombre[MAX_CLIENT];
+    int posicion = 0, lista = 1;
+    Clientes temp;
+    system("cls");
+
+    cin.ignore();
+
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
+    getSizeClientes();
+    vector<int> posiciones;
+
+    ingresoApellido();
+
+    if (archivo != NULL)
+    {
+        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+        {
+            if (strcmp(i->apellidos, cliente.apellidos) == 0)
+            {
+                cout << lista << ". " << i->dui << " " << i->nombres << " " << i->apellidos << endl;
+                lista++;
+                posiciones.push_back(posicion);
+            }
+            posicion++;
+        }
+
+        if (posiciones.empty())
+        {
+            cout << RED << "No hay clientes registrados con ese apellido" << RESET << endl;
+            fclose(archivo);
+            clientesAux.clear();
+            return;
+        }
+        else
+        {
+            cout << "Seleccione el usuario a editar: ";
+            posicion = leer();
+
+            if (posicion == 0)
+            {
+                fclose(archivo);
+                clientesAux.clear();
+                return;
+            }
+
+            posicion = posiciones[posicion - 1];
+
+            edicion(clientesAux, posicion);
+
+            fseek(archivo, 0, SEEK_SET);
+            for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+            {
+                fwrite(&(*i), sizeof(Clientes), 1, archivo);
+            }
+        }
+    }
+
+    fclose(archivo);
+    clientesAux.clear();
+    cout << GREEN << "Datos actualizados correctamente" << RESET;
+    system("pause>null");
+}
+
+void edicion(vector<Clientes> &editar, int index)
+{
+    int edicion = 0;
+    cout << "Que desea Editar" << endl;
+    cout << "1. Nombre" << endl;
+    cout << "2. Apellidos" << endl;
+    cout << "Seleccione una opcion: ";
+    edicion = leer();
+    cin.ignore();
+    switch (edicion)
+    {
+    case 1:
+        ingresoNombre();
+        validarMayusculas();
+        strcpy(editar[index].nombres, cliente.nombres);
+        break;
+    case 2:
+        ingresoApellido();
+        validarMayusculas();
+        strcpy(editar[index].apellidos, cliente.apellidos);
+        break;
+
+    default:
+        break;
+    }
 }
 
 void eliminarCliente()
