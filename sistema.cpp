@@ -296,12 +296,28 @@ void mantenimiento()
 void ingresarClientes()
 {
     bool isEncontrado = false;
-    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "a+b");
 
     if (archivo != NULL)
     {
-
+        cin.ignore();
         system("cls");
+
+        do
+        {
+            cout << "Ingrese el DUI del cliente: ";
+            cin.getline(cliente.dui, 100);
+
+            if (duiExiste(cliente.dui))
+            {
+                cout << RED << "El dui ya esta registrado" << RESET << endl;
+            }
+            else if (!validarDui(cliente.dui))
+            {
+                cout << RED << "DUI invalido" << RESET << endl;
+            }
+
+        } while (!validarDui(cliente.dui) || duiExiste(cliente.dui));
 
         fflush(stdin);
 
@@ -316,7 +332,6 @@ void ingresarClientes()
         do
         {
             ingresarDireccion();
-            getSizeClientes();
 
             char aux[MAX_ADDRESS];
 
@@ -341,30 +356,9 @@ void ingresarClientes()
 
         fflush(stdin);
 
-        do
-        {
-            cout << "Ingrese el DUI del cliente: ";
-            cin.getline(cliente.dui, 100);
-
-            if (duiExiste(cliente.dui))
-            {
-                cout << RED << "El dui ya esta registrado" << RESET << endl;
-            }
-            else if (!validarDui(cliente.dui))
-            {
-                cout << RED << "DUI invalido" << RESET << endl;
-            }
-
-        } while (!validarDui(cliente.dui) || duiExiste(cliente.dui));
         cliente.pago = false;
 
-        clientesAux.push_back(cliente);
-
-        fseek(archivo, 0, SEEK_SET);
-        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
-        {
-            fwrite(&(*i), sizeof(Clientes), 1, archivo);
-        }
+        fwrite(&cliente, sizeof(Clientes), 1, archivo);
 
         cout << GREEN << "Cliente agregado correctamente" << RESET << endl;
         system("pause>null");
@@ -376,7 +370,6 @@ void ingresarClientes()
     {
         cout << RED << "[ERROR]: Creacion de archivo invalida." << RESET; // le agregue color
     }
-    clientesAux.clear();
     fclose(archivo);
 }
 
