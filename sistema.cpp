@@ -59,6 +59,7 @@ int opcion = 0;
 
 vector<Clientes> clientesAux;
 
+// Funciones de menus
 void login();
 void iniciarSesion();
 void crearCuenta();
@@ -66,17 +67,21 @@ void menuPrincipal();
 void mantenimiento();
 void menuMantenimiento();
 void editar();
+// Funciones relacionadas al cliente
 void ingresarClientes();
 void verClientes();
 void agregarPago();
 void verPago();
 void correlativo();
 void seccionCliente();
+// Funciones encargadas de editar
 void busquedaDui();
 void busquedaNombre();
 void busquedaApellido();
 void edicion(vector<Clientes> &, int);
+// Funciones encargadas de eliminar
 void eliminarCliente();
+// Funciones de validacion
 void validarMayusculas();
 bool validarCliente(char[]);
 void formatoNombre();
@@ -85,11 +90,13 @@ void ingresoNombre();
 void ingresoApellido();
 bool duiExiste(char[]);
 bool validarDui(char[]);
+bool validarUsuario();
+// Funciones pde valicacion para el login
 bool verificarUsuario(bool);
 bool comprobarPassword();
-bool validarUsuario();
-void getSizeClientes();
 void password();
+//
+void getSizeClientes();
 int leer();
 void gotoxy(int, int);
 
