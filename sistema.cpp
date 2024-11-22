@@ -867,6 +867,7 @@ void edicion(vector<Clientes> &editar, int index)
     cout << "Que desea Editar" << endl;
     cout << "1. Nombre" << endl;
     cout << "2. Apellidos" << endl;
+    cout << "3. DUI" << endl;
     cout << "Seleccione una opcion: ";
     edicion = leer();
     cin.ignore();
@@ -881,6 +882,24 @@ void edicion(vector<Clientes> &editar, int index)
         ingresoApellido();
         validarMayusculas();
         strcpy(editar[index].apellidos, cliente.apellidos);
+        break;
+    case 3:
+        do
+        {
+            cout << "Ingrese el DUI del cliente: ";
+            cin.getline(cliente.dui, 100);
+
+            if (duiExiste(cliente.dui))
+            {
+                cout << RED << "El dui ya esta registrado" << RESET << endl;
+            }
+            else if (!validarDui(cliente.dui))
+            {
+                cout << RED << "DUI invalido" << RESET << endl;
+            }
+
+        } while (!validarDui(cliente.dui) || duiExiste(cliente.dui));
+        strcpy(editar[index].dui, cliente.dui);
         break;
 
     default:
