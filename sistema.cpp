@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <limits>
 #include <cstring>
 #include <cmath>
@@ -28,7 +27,7 @@ struct Direccion
     char zona[MAX_LENGTH];
     char via[MAX_LENGTH];
     int numCasa;
-    char distrito[MAX_LENGTH];
+    char municipio[MAX_LENGTH];
     char depto[MAX_LENGTH];
     char completa[MAX_ADDRESS];
 };
@@ -108,7 +107,7 @@ void gotoxy(int, int);
 void ingresarDireccion();
 void formatoZona();
 void formatoVia();
-void formatoDistrito();
+void formatoMunicipio();
 void formatoDepto();
 void validarMayusDireccion(char[]);
 void concatenarDireccion(int, int);
@@ -173,7 +172,6 @@ void iniciarSesion()
         {
             cout << RED << "\nEl usuario y/o el password son incorrectos" << RESET << endl;
             intentos--;
-            system("pause>null");
         }
 
     } while (!ingresa && intentos > 0);
@@ -186,6 +184,7 @@ void iniciarSesion()
     {
         cout << RED << "\nNo pudo entrar al sistema" << RESET << endl;
     }
+    system("pause>null");
 }
 
 void crearCuenta()
@@ -594,7 +593,7 @@ void agregarPago()
                     {
 
                         pago = consumoKw * 0.16 * 1.05;
-                        cout << "\nSe ha aplicado una multa del 5% por retraso. El monto total a pagar es: " << fixed << setprecision(2) << pago << endl;
+                        cout << "\nSe ha aplicado una multa del 5% por retraso. El monto total a pagar es: " << pago << endl;
                     }
                     else
                     {
@@ -608,6 +607,8 @@ void agregarPago()
                     registroPago.mes = mes;
                     registroPago.anio = anio;
 
+                    fseek(archivoPagos, 0, SEEK_SET);
+                    fseek(archivoClientes, 0, SEEK_SET);
                     fwrite(&registroPago, sizeof(RegistroPago), 1, archivoPagos);
 
                     clientes[i].pago = true;
@@ -1149,24 +1150,24 @@ void formatoVia()
     }
 }
 
-void formatoDistrito()
+void formatoMunicipio()
 {
     char cadena[MAX_LENGTH];
     char *auxiliar;
 
-    strcpy(cadena, cliente.direccion.distrito);
-    strcpy(cliente.direccion.distrito, "");
+    strcpy(cadena, cliente.direccion.municipio);
+    strcpy(cliente.direccion.municipio, "");
 
     auxiliar = strtok(cadena, " ");
 
     while (auxiliar != NULL)
     {
-        strcat(cliente.direccion.distrito, auxiliar);
+        strcat(cliente.direccion.municipio, auxiliar);
         auxiliar = strtok(NULL, " ");
 
         if (auxiliar != NULL)
         {
-            strcat(cliente.direccion.distrito, " ");
+            strcat(cliente.direccion.municipio, " ");
         }
     }
 }
@@ -1222,8 +1223,10 @@ void ingresarDireccion()
     bool isReal = false;
     bool isEspacio = true;
     bool isEncontrado = false;
+    bool isValido = false;
     char aux[MAX_LENGTH];
-    char deptos[15][MAX_LENGTH] = {{"AHUACHAPAN"}, {"SONSONATE"}, {"SANTA ANA"}, {"LA LIBERTAD"}, {"CHALATENANGO"}, {"SAN SALVADOR"}, {"CUSCATLAN"}, {"LA PAZ"}, {"SAN VICENTE"}, {"CABANIAS"}, {"CABANAS"}, {"USULUTAN"}, {"SAN MIGUEL"}, {"MORAZAN"}, {"LA UNION"}};
+    char sanviNorte[7][MAX_LENGTH] = {"APASTEPEQUE", "SANTA CLARA", "SAN IDELFONSO", "SAN ESTEBAN CATARINA", "SAN SEBASTIAN", "SAN LORENZO", "SANTO DOMINGO"};
+    char sanviSur[6][MAX_LENGTH] = {"SAN VICENTE", "GUADALUPE", "VERAPAZ", "TEPETITAN", "TECOLUCA", "SAN CAYETANO ISTEPEQUE"};
 
     do
     {
@@ -1231,7 +1234,7 @@ void ingresarDireccion()
         gotoxy(30, 0);
         cout << "Ingrese la direccion del cliente." << endl;
         gotoxy(10, 2);
-        cout << "Estas en la seccion: [" << GREEN << "Zona" << RESET << ", Via, No.Casa, Distrito, Departamento]\n";
+        cout << "Estas en la seccion: [" << GREEN << "Zona" << RESET << ", Via, No.Casa, Municipio]\n";
         gotoxy(0, 4);
         cout << "Seleccione el formato de su direccion: " << endl;
         gotoxy(0, 6);
@@ -1285,7 +1288,7 @@ void ingresarDireccion()
     {
         system("cls");
         gotoxy(10, 0);
-        cout << "Estas en la seccion: [Zona, " << GREEN << "Via" << RESET << ", No.Casa, Distrito, Departamento]\n";
+        cout << "Estas en la seccion: [Zona, " << GREEN << "Via" << RESET << ", No.Casa, Municipio]\n";
         gotoxy(0, 2);
         cout << "Seleccione el formato de su direccion: " << endl;
         cout << "\n1. Calle." << endl;
@@ -1342,9 +1345,27 @@ void ingresarDireccion()
             break;
         }
 
-        formatoVia();
+        if (strlen(cliente.direccion.via) <= 0)
+        {
+            isValido = false;
+        }
 
-    } while (!validarCliente(cliente.direccion.via));
+        for (int i = 0; i < strlen(cliente.direccion.via); i++)
+        {
+            if (!((cliente.direccion.via[i] >= 'A' && cliente.direccion.via[i] <= 'Z') ||
+                  (cliente.direccion.via[i] >= 'a' && cliente.direccion.via[i] <= 'z') ||
+                  (cliente.direccion.via[i] >= '1' && cliente.direccion.via[i] <= '9') ||
+                  (cliente.direccion.via[i] == '#') ||
+                  cliente.direccion.via[i] == ' '))
+            {
+                isValido = false;
+                break;
+            }
+
+            isValido = true;
+        }
+
+    } while (!isValido);
 
     cont++; // 2
 
@@ -1357,7 +1378,7 @@ void ingresarDireccion()
     fflush(stdin);
 
     gotoxy(10, 0);
-    cout << "Estas en la seccion: [Zona, Via, " << GREEN << "No.Casa" << RESET << ", Distrito, Departamento]\n";
+    cout << "Estas en la seccion: [Zona, Via, " << GREEN << "No.Casa" << RESET << ", Municipio]\n";
 
     cout << "\nIngrese el numero de casa: #";
     cliente.direccion.numCasa = leer();
@@ -1372,59 +1393,49 @@ void ingresarDireccion()
     {
         system("cls");
         gotoxy(10, 0);
-        cout << "Estas en la seccion: [Zona, Via, No.Casa, " << GREEN << "Distrito" << RESET << ", Departamento]\n";
-        cout << "\nIngrese el distrito: ";
-        cin.getline(cliente.direccion.distrito, MAX_ADDRESS);
+        cout << "Estas en la seccion: [Zona, Via, No.Casa, " << GREEN << "Municipio" << RESET << "]\n";
+        cout << "\nIngrese el municipio: ";
+        cin.getline(cliente.direccion.municipio, MAX_ADDRESS);
 
-        formatoDistrito();
-
-    } while (!validarCliente(cliente.direccion.distrito));
-
-    cont++; // 4
-
-    validarMayusDireccion(cliente.direccion.distrito);
-
-    concatenarDireccion(op, cont);
-
-    do
-    {
-        do
-        {
-            system("cls");
-            gotoxy(10, 0);
-            cout << "Estas en la seccion: [Zona, Via, No.Casa, Distrito, " << GREEN << "Departamento" << RESET << "]\n";
-            cout << "\nIngrese el departamento: ";
-            cin.getline(cliente.direccion.depto, MAX_ADDRESS);
-
-        } while (!validarCliente(cliente.direccion.depto));
-
-        formatoDepto();
+        formatoMunicipio();
 
         /////////////////// Mayusculas //////////////////////
 
-        strcpy(aux, cliente.direccion.depto);
+        strcpy(aux, cliente.direccion.municipio);
 
-        for (int i = 0; i < strlen(cliente.direccion.depto); i++)
+        for (int i = 0; i < strlen(cliente.direccion.municipio); i++)
         {
-            aux[i] = toupper(cliente.direccion.depto[i]);
+            aux[i] = toupper(cliente.direccion.municipio[i]);
         }
 
         /////////////////////////////////////////////////////
 
         for (int i = 0; i < 14; i++)
         {
-            if (strcmp(aux, deptos[i]) == 0)
+            if (strcmp(aux, sanviNorte[i]) == 0)
             {
                 isReal = true;
+                op = 1; // Para saber si entro en SanviNorte
+                break;
+            }
+
+            if (strcmp(aux, sanviSur[i]) == 0)
+            {
+                isReal = true;
+                op = 2; // Para saber si entro en sanviSur
                 break;
             }
         }
 
-    } while (!isReal);
+    } while (!validarCliente(cliente.direccion.municipio));
+
+    cont++; // 4
+
+    validarMayusDireccion(cliente.direccion.municipio);
+
+    concatenarDireccion(op, cont);
 
     cont++; // 5
-
-    validarMayusDireccion(cliente.direccion.depto);
 
     concatenarDireccion(op, cont);
 
@@ -1526,15 +1537,24 @@ void concatenarDireccion(int num, int cont)
     if (cont == 4)
     {
         strcat(cliente.direccion.completa, ", ");
-        strcat(cliente.direccion.completa, cliente.direccion.distrito);
+        strcat(cliente.direccion.completa, cliente.direccion.municipio);
 
         return;
     }
 
     if (cont == 5)
     {
-        strcat(cliente.direccion.completa, ", ");
-        strcat(cliente.direccion.completa, cliente.direccion.depto);
+        if (num == 1)
+        {
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, "San Vicente Norte");
+        }
+
+        if (num == 2)
+        {
+            strcat(cliente.direccion.completa, ", ");
+            strcat(cliente.direccion.completa, "San Vicente Sur");
+        }
 
         return;
     }
