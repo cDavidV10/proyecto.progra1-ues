@@ -85,6 +85,7 @@ void busquedaDui();
 void busquedaNombre();
 void busquedaApellido();
 void edicion();
+void loop();
 // Funciones encargadas de eliminar
 void eliminarCliente();
 // Funciones de validacion
@@ -186,7 +187,7 @@ void iniciarSesion()
     {
         cout << RED << "\nNo pudo entrar al sistema" << RESET << endl;
     }
-    system("pause>null");
+    cin.get();
 }
 
 void crearCuenta()
@@ -395,7 +396,7 @@ void ingresarClientes()
         fwrite(&cliente, sizeof(Clientes), 1, archivo);
 
         cout << GREEN << "Cliente agregado correctamente" << RESET << endl;
-        system("pause>null");
+        cin.get();
 
         fflush(stdin);
     }
@@ -759,7 +760,7 @@ void busquedaDui()
         if (!clienteEncontrado)
         {
             cout << RED << "Cliente no encontrado" << RESET << endl;
-            system("pause>null");
+            cin.get();
             fclose(archivo);
             return;
         }
@@ -773,13 +774,13 @@ void busquedaDui()
     fclose(archivo);
     clientesAux.clear();
     cout << GREEN << "Datos actualizados correctamente" << RESET;
-    system("pause>null");
+    cin.get();
 }
 
 void busquedaNombre()
 {
     char nombre[MAX_CLIENT];
-    int lista = 1, key;
+    int lista = 1;
     Clientes temp;
     system("cls");
 
@@ -802,59 +803,10 @@ void busquedaNombre()
             }
             posicion++;
         }
-
-        if (posiciones.empty())
-        {
-            cout << RED << "No hay clientes registrados con ese nombre" << RESET << endl;
-            fclose(archivo);
-            system("pause>null");
-            clientesAux.clear();
-            return;
-        }
-        else
-        {
-
-            cout << "Seleccione el cliente: ";
-            posicion = leer();
-
-            posicion = posiciones[posicion - 1];
-
-            cout << "Que desea realizar con el cliente" << endl;
-            cout << "Esc para salir" << endl;
-            cout << "F2 para editar" << endl;
-            cout << "F3 para eliminar" << endl;
-            key = _getch();
-
-            if (key == 27)
-            {
-                fclose(archivo);
-                clientesAux.clear();
-                posiciones.clear();
-                return;
-            }
-
-            if (key == 0 || key == 224)
-            {
-                key = _getch();
-
-                if (key == 60)
-                {
-                    editar();
-                    cin.get();
-                    fclose(archivo);
-
-                    return;
-                }
-
-                if (key == 61)
-                {
-                    eliminarCliente();
-                    fclose(archivo);
-                    return;
-                }
-            }
-        }
     }
+    fclose(archivo);
+
+    loop();
 }
 
 void busquedaApellido()
@@ -919,7 +871,7 @@ void busquedaApellido()
     fclose(archivo);
     clientesAux.clear();
     cout << GREEN << "Datos actualizados correctamente" << RESET;
-    system("pause>null");
+    cin.get();
 }
 
 void edicion()
@@ -965,6 +917,58 @@ void edicion()
 
     default:
         break;
+    }
+}
+
+void loop()
+{
+    int key;
+    if (posiciones.empty())
+    {
+        cout << RED << "No hay clientes registrados con ese nombre" << RESET << endl;
+        cin.get();
+        clientesAux.clear();
+        return;
+    }
+    else
+    {
+
+        cout << "Seleccione el cliente: ";
+        posicion = leer();
+
+        posicion = posiciones[posicion - 1];
+
+        cout << "Que desea realizar con el cliente" << endl;
+        cout << "Esc para salir" << endl;
+        cout << "F2 para editar" << endl;
+        cout << "F3 para eliminar" << endl;
+        key = _getch();
+
+        if (key == 27)
+        {
+            clientesAux.clear();
+            posiciones.clear();
+            return;
+        }
+
+        if (key == 0 || key == 224)
+        {
+            key = _getch();
+
+            if (key == 60)
+            {
+                editar();
+                cin.get();
+
+                return;
+            }
+
+            if (key == 61)
+            {
+                eliminarCliente();
+                return;
+            }
+        }
     }
 }
 
