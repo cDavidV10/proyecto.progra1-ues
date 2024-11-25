@@ -9,7 +9,7 @@
 #include <windows.h>
 
 using namespace std;
-const int MAX_LENGTH = 30; // Cambie el tamano de 20 a 30
+const int MAX_LENGTH = 30;
 const int MAX_ADDRESS = 200;
 const int ENTER = 13;
 const int BACKSPACE = 8;
@@ -21,6 +21,10 @@ const string RED = "\033[1;31m";
 const string GREEN = "\033[1;32m";
 const string RESET = "\033[0m";
 const int MAX_CLIENT = 50;
+const double PRECIO_KWH = 0.16;
+const double MULTA_RETRASO = 0.03;
+const int MES_ACTUAL = 10;
+const int ANIO_ACTUAL = 2024;
 
 struct Direccion
 {
@@ -73,21 +77,27 @@ void crearCuenta();
 void menuPrincipal();
 void editar();
 void busqueda();
+
 // Funciones relacionadas al cliente
 void ingresarClientes();
 void verClientes();
 void agregarPago();
 void verPago();
+void pago();
+string obtenerMes(int mes);
 void correlativo();
 void seccionCliente();
+
 // Funciones encargadas de editar
 void busquedaDui();
 void busquedaNombre();
 void busquedaApellido();
 void edicion();
 void loop();
+
 // Funciones encargadas de eliminar
 void eliminarCliente();
+
 // Funciones de validacion
 void validarMayusculas();
 bool validarCliente(char[]);
@@ -98,6 +108,7 @@ void ingresoApellido();
 bool duiExiste(char[]);
 bool validarDui(char[]);
 bool validarUsuario();
+
 // Funciones pde valicacion para el login
 bool verificarUsuario(bool);
 bool comprobarPassword();
@@ -146,7 +157,7 @@ void login()
     system("cls");
     cout << "------     BIENVENIDOS AL SISTEMA     ------" << endl;
     cout << "1. Iniciar Sesion" << endl;
-    cout << "2. Registrarse" << endl; // Cambie de crear cuenta a registrarse
+    cout << "2. Registrarse" << endl;
     cout << "3. Salir" << endl;
     cout << "Seleccione una opcion del menu: ";
     loginOpcion = leer();
@@ -174,6 +185,7 @@ void iniciarSesion()
         else
         {
             cout << RED << "\nEl usuario y/o el password son incorrectos" << RESET << endl;
+            cin.get();
             intentos--;
         }
 
@@ -187,7 +199,6 @@ void iniciarSesion()
     {
         cout << RED << "\nNo pudo entrar al sistema" << RESET << endl;
     }
-    cin.get();
 }
 
 void crearCuenta()
@@ -249,11 +260,10 @@ void menuPrincipal()
         system("cls");
         cout << "------     MENU PRINCIPAL     ------" << endl;
         cout << "1. Agregar Cliente" << endl;
-        cout << "2. Agregar Pago" << endl;
-        cout << "3. Busqueda" << endl;
-        cout << "4. Ver Clientes" << endl;
-        cout << "5. Ver Pago" << endl;
-        cout << "6. Salir" << endl;
+        cout << "2. Busqueda" << endl;
+        cout << "3. Ver Clientes" << endl;
+        cout << "4. Ver Pago" << endl;
+        cout << "5. Salir" << endl;
         cout << "Seleccione una opcion del menu: ";
         menuOpcion = leer();
 
@@ -265,16 +275,12 @@ void menuPrincipal()
             break;
 
         case 2:
-            agregarPago();
-            break;
-
-        case 3:
             busqueda();
             break;
-        case 4:
+        case 3:
             verClientes();
             break;
-        case 5:
+        case 4:
             verPago();
             break;
 
@@ -282,7 +288,7 @@ void menuPrincipal()
             break;
         }
 
-    } while (menuOpcion != 6);
+    } while (menuOpcion != 5);
 }
 
 void busqueda()
@@ -452,7 +458,7 @@ void verClientes()
 
     else
     {
-        cout << RED << "[ERROR]: Creacion de archivo invalida." << RESET; // le agregue color
+        cout << RED << "[ERROR]: Creacion de archivo invalida." << RESET;
     }
 
     fclose(archivo);
@@ -466,242 +472,253 @@ void verClientes()
 
 void agregarPago()
 {
-    bool clienteEncontrado;
-    int numClientes;
-
-    Clientes clientes[MAX_CLIENT];
-
     cin.ignore();
-    system("cls");
-    cout << "------     PAGO    ------" << endl;
-
-    char duiCliente[100];
     double pago;
     int decimales = 2;
     int mes;
-    int anio;
+    int key;
     double consumoKw;
-    int mesActual = 10;
-    int anioActual = 2024;
     RegistroPago pagoExistente;
     bool pagoRegistrado = false;
+    int mesesDeRetraso;
 
-    FILE *archivoClientes = fopen(RUTA_CLIENTE.c_str(), "r+b");
-    FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "a+b");
-
-    if (archivoClientes != NULL && archivoPagos != NULL)
+    if (clientesAux.empty())
     {
-        Clientes cliente;
-        RegistroPago registroPago;
-        clienteEncontrado = false;
-        numClientes = 0;
+        cout << RED << "No hay clientes registrados" << RESET << endl;
+        cin.get();
+        return;
+    }
 
-        while (fread(&cliente, sizeof(Clientes), 1, archivoClientes) == 1)
-        {
-            clientes[numClientes++] = cliente;
-        }
+    FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "a+b");
+    FILE *archivoCliente = fopen(RUTA_CLIENTE.c_str(), "wb");
 
-        if (numClientes == 0)
+    system("cls");
+
+    cout << "------     PAGO    ------" << endl;
+
+    if (archivoPagos != NULL)
+    {
+
+        cout << "Cliente encontrado: " << clientesAux[posicion].nombres << " " << clientesAux[posicion].apellidos << endl;
+
+        cout << "Presione cualquier tecla para continuar" << endl;
+        cout << "Presione esc para salir" << endl;
+
+        key = _getch();
+
+        if (key == 27)
         {
-            cout << "\nNo hay usuarios registrados" << endl;
-            fclose(archivoClientes);
+            clientesAux.clear();
+            posiciones.clear();
+
             fclose(archivoPagos);
-            system("pause");
+            fclose(archivoCliente);
             return;
         }
 
-        for (int i = 0; i < numClientes; i++)
+        cout << "Ingrese el consumo en kWh: ";
+        cin >> consumoKw;
+
+        if (consumoKw > 0)
         {
-            if (strcmp(clientes[i].dui, duiCliente) == 0)
+
+            cout << "Seleccione el mes para el pago:" << endl;
+            for (int i = 1; i <= 12; i++)
             {
-                clienteEncontrado = true;
+                cout << i << ". " << obtenerMes(i) << endl;
+            }
 
-                cout << "Ingrese el consumo en kWh: ";
-                cin >> consumoKw;
+            cout << "Mes (1-12): ";
+            cin >> mes;
 
-                if (consumoKw > 0)
+            if (mes < 1 || mes > 12)
+            {
+                cout << "\nMes invalido. Ingrese nuevamente" << endl;
+                system("pause");
+                fclose(archivoPagos);
+                clientesAux.clear();
+                return;
+            }
+
+            while (!feof(archivoPagos))
+            {
+                fread(&pagoExistente, sizeof(RegistroPago), 1, archivoPagos);
+                if (strcmp(pagoExistente.persona, clientesAux[posicion].nombres) == 0 &&
+                    pagoExistente.mes == mes && pagoExistente.anio == ANIO_ACTUAL)
                 {
-                    cout << "Ingrese el anio (2020-2024): ";
-                    cin >> anio;
-
-                    if (anio < 2020 || anio > 2024)
-                    {
-                        cout << "\nAnio invalido. Ingrese nuevamente" << endl;
-                        system("pause");
-                        break;
-                    }
-
-                    cout << "Seleccione el mes para el pago:" << endl;
-                    cout << "1. Enero\n2. Febrero\n3. Marzo\n4. Abril\n5. Mayo\n6. Junio\n";
-                    cout << "7. Julio\n8. Agosto\n9. Septiembre\n10. Octubre\n11. Noviembre\n12. Diciembre\n";
-                    cout << "Mes (1-12): ";
-                    cin >> mes;
-
-                    if (mes < 1 || mes > 12)
-                    {
-                        cout << "\nMes invalido. Ingrese nuevamente" << endl;
-                        system("pause");
-                        break;
-                    }
-
-                    // FILE *archivoPagosExistentes = fopen(RUTA_REGISTRO.c_str(), "rb");
-
-                    if (archivoPagos != NULL)
-                    {
-                        while (fread(&pagoExistente, sizeof(RegistroPago), 1, archivoPagos) == 1)
-                        {
-                            if (strcmp(pagoExistente.persona, clientes[i].nombres) == 0 &&
-                                pagoExistente.mes == mes && pagoExistente.anio == anio)
-                            {
-                                pagoRegistrado = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (pagoRegistrado)
-                    {
-                        cout << "\nEste cliente ya ha pagado en el mes " << mes << " del anio " << anio << "." << endl;
-                        system("pause");
-                        break;
-                    }
-
-                    int mesesDeRetraso = (anioActual - anio) * 12 + (mesActual - mes);
-
-                    if (mesesDeRetraso > 2)
-                    {
-
-                        pago = consumoKw * 0.16 * 1.05;
-                        cout << "\nSe ha aplicado una multa del 5% por retraso. El monto total a pagar es: " << pago << endl;
-                    }
-                    else
-                    {
-                        pago = (consumoKw * 0.16) + ((consumoKw * 0.16) * 0.3);
-                    }
-
-                    pago = round(pago * pow(10, decimales)) / pow(10, decimales);
-
-                    strcpy(registroPago.persona, clientes[i].nombres);
-                    registroPago.pago = pago;
-                    registroPago.mes = mes;
-                    registroPago.anio = anio;
-
-                    fseek(archivoPagos, 0, SEEK_SET);
-                    fseek(archivoClientes, 0, SEEK_SET);
-                    fwrite(&registroPago, sizeof(RegistroPago), 1, archivoPagos);
-
-                    clientes[i].pago = true;
-
-                    // fclose(archivoClientes);
-                    // archivoClientes = fopen(RUTA_CLIENTE.c_str(), "wb");
-
-                    for (int j = 0; j < numClientes; j++)
-                    {
-                        fwrite(&clientes[j], sizeof(Clientes), 1, archivoClientes);
-                    }
-
-                    cout << "\nPago de $" << pago << " agregado correctamente para el mes " << mes << " del anio " << anio << endl;
-                    system("pause");
-                    break;
-                }
-
-                else
-                {
-                    cout << "\nEl consumo debe ser mayor a 0 kWh" << endl;
-                    system("pause");
+                    pagoRegistrado = true;
                     break;
                 }
             }
-        }
 
-        if (!clienteEncontrado)
-        {
-            cout << "\nCliente no encontrado" << endl;
+            if (pagoRegistrado)
+            {
+                cout << "\nEste cliente ya ha pagado en el mes " << obtenerMes(mes) << " del a" << (char)164 << "o " << ANIO_ACTUAL << "." << endl;
+                fseek(archivoCliente, 0, SEEK_SET);
+                for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+                {
+                    fwrite(&(*i), sizeof(Clientes), 1, archivoCliente);
+                }
+                cin.ignore();
+                cin.get();
+                clientesAux.clear();
+                posiciones.clear();
+                fclose(archivoPagos);
+                fclose(archivoCliente);
+                return;
+            }
+
+            mesesDeRetraso = (ANIO_ACTUAL - ANIO_ACTUAL) * 12 + (MES_ACTUAL - mes);
+
+            if (mesesDeRetraso > 2)
+            {
+                pago = consumoKw * PRECIO_KWH * (1 + MULTA_RETRASO) * (1 + 0.30) * (1 + 0.13);
+                cout << "\nSe ha aplicado una multa del 3% por retraso. El monto total a pagar es: " << pago << endl;
+            }
+            else
+            {
+                pago = (consumoKw * PRECIO_KWH) + (consumoKw * 0.3) + (consumoKw * 0.13);
+            }
+
+            pago = round(pago * pow(10, decimales)) / pow(10, decimales);
+
+            RegistroPago registroPago;
+            strcpy(registroPago.persona, clientesAux[posicion].nombres);
+            registroPago.pago = pago;
+            registroPago.mes = mes;
+            registroPago.anio = ANIO_ACTUAL;
+
+            fseek(archivoPagos, 0, SEEK_END); // para ver si esta al final del archivo
+            fwrite(&registroPago, sizeof(RegistroPago), 1, archivoPagos);
+
+            clientesAux[posicion].pago = true;
+
+            cout << "\nPago de $" << pago << " agregado correctamente para el mes " << obtenerMes(mes) << " del a" << (char)164 << "o: " << ANIO_ACTUAL << endl;
             system("pause");
         }
 
-        fclose(archivoClientes);
-        fclose(archivoPagos);
+        else
+        {
+            cout << "\nEl consumo debe ser mayor a 0 kWh" << endl;
+            system("pause");
+        }
+
+        fseek(archivoCliente, 0, SEEK_SET);
+        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+        {
+            fwrite(&(*i), sizeof(Clientes), 1, archivoCliente);
+        }
     }
 
-    else
-    {
-        cout << "\nError al abrir los archivos de clientes o pagos" << endl;
-        system("pause");
-    }
+    clientesAux.clear();
+    posiciones.clear();
+    fclose(archivoPagos);
+    fclose(archivoCliente);
 }
-
-/////////////////////////// fin
 
 void verPago()
 {
+    bool registroEncontrado = false;
+    int sitio;
     bool pagoRealizado;
-    bool registroEncontrado;
+    bool pagoCliente;
+
+    cin.ignore();
 
     system("cls");
     cout << "------     VER PAGO     ------" << endl;
 
-    FILE *archivoClientes = fopen(RUTA_CLIENTE.c_str(), "rb");
     FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "rb");
 
-    if (archivoClientes != NULL && archivoPagos != NULL)
+    getSizeClientes();
+
+    if (clientesAux.empty())
     {
-        Clientes cliente;
+        cout << "\nNo hay usuarios registrados" << endl;
+        cin.get();
+        return;
+    }
 
+    vector<RegistroPago> pagos;
+    if (archivoPagos != NULL)
+    {
         RegistroPago pago;
+        sitio = 3;
 
-        registroEncontrado = false;
-
-        while (fread(&cliente, sizeof(Clientes), 1, archivoClientes) == 1)
+        while (!feof(archivoPagos))
         {
-            fseek(archivoPagos, 0, SEEK_SET);
+            fread(&pago, sizeof(RegistroPago), 1, archivoPagos);
 
-            pagoRealizado = false;
-
-            while (fread(&pago, sizeof(RegistroPago), 1, archivoPagos) == 1)
+            if (!feof(archivoPagos))
             {
-                if (strcmp(cliente.nombres, pago.persona) == 0)
+
+                pagos.push_back(pago);
+            }
+        }
+
+        if (pagos.empty())
+        {
+            cout << RED << "No hay registros de pagos" << RESET << endl;
+            cin.get();
+            clientesAux.clear();
+            pagos.clear();
+            fclose(archivoPagos);
+            return;
+        }
+
+        for (size_t i = 0; i < clientesAux.size(); i++)
+        {
+            for (size_t j = 0; j < pagos.size(); j++)
+            {
+                if (strcmp(clientesAux[i].nombres, pagos[j].persona) == 0)
                 {
-                    gotoxy(0, 3 + registroEncontrado);
-                    cout << "Cliente: " << cliente.nombres << " " << cliente.apellidos;
-                    cout << " | DUI: " << cliente.dui;
-                    cout << " | Monto: $" << pago.pago;
-                    cout << " | Estado: " << GREEN << "Pagado" << RESET << endl;
+                    gotoxy(0, sitio);
+                    cout << "Cliente: " << clientesAux[i].nombres << " " << clientesAux[i].apellidos;
+                    cout << " | DUI: " << clientesAux[i].dui;
+                    cout << " | Mes: " << obtenerMes(pagos[j].mes) << " | A" << (char)164 << "o " << pagos[j].anio;
+                    cout << " | Monto: $" << pagos[j].pago;
+                    if (clientesAux[i].pago)
+                    {
 
-                    pagoRealizado = true;
-
-                    registroEncontrado = true;
+                        cout << " | Estado: " << GREEN << "Pagado" << RESET << endl;
+                    }
+                    else
+                    {
+                        cout << " | Estado: " << RED << "Sin pagar" << RESET << endl;
+                    }
+                    sitio++;
 
                     break;
                 }
             }
-
-            if (!pagoRealizado)
-            {
-                gotoxy(0, 3 + registroEncontrado);
-                cout << "Cliente: " << cliente.nombres << " " << cliente.apellidos;
-                cout << " | DUI: " << cliente.dui;
-                cout << " | Estado:" << RED << "Sin Pago" << RESET << endl;
-                registroEncontrado = true;
-            }
         }
-
-        if (!registroEncontrado)
-        {
-            cout << RED << "\nNo se han encontrado registros de clientes o pagos." << RESET << endl;
-        }
-
-        fclose(archivoClientes);
-        fclose(archivoPagos);
     }
-
     else
     {
-        cout << RED << "\nError al abrir los archivos de clientes o pagos" << RESET << endl;
+        cout << RED << "\nError al abrir los archivos de pagos" << RESET << endl;
     }
-
+    pagos.clear();
+    clientesAux.clear();
     system("pause");
 }
+
+// Agregue esta funcion para utilizar los meses tanto en ver pago como agregar
+
+string obtenerMes(int mes)
+{
+
+    string meses[12] = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+
+    if (mes < 1 || mes > 12)
+    {
+        return "Mes invalido";
+    }
+
+    return meses[mes - 1];
+}
+
+/////////////////////////// fin
 
 void busquedaDui()
 {
@@ -940,6 +957,7 @@ void loop()
 
         cout << "Que desea realizar con el cliente" << endl;
         cout << "Esc para salir" << endl;
+        cout << "F1 para agregar pago" << endl;
         cout << "F2 para editar" << endl;
         cout << "F3 para eliminar" << endl;
         key = _getch();
@@ -954,6 +972,12 @@ void loop()
         if (key == 0 || key == 224)
         {
             key = _getch();
+
+            if (key == 59)
+            {
+                agregarPago();
+                return;
+            }
 
             if (key == 60)
             {
