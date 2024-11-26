@@ -86,13 +86,14 @@ void pago();
 string obtenerMes(int mes);
 void correlativo();
 void seccionCliente();
+void seleccion();
 
 // Funciones encargadas de editar
 void busquedaDui();
 void busquedaNombre();
 void busquedaApellido();
 void edicion();
-void loop();
+void funcionEditar();
 
 // Funciones encargadas de eliminar
 void eliminarCliente();
@@ -302,6 +303,9 @@ void busqueda()
 
     switch (menu)
     {
+    case 1:
+        busquedaDui();
+        break;
     case 2:
         busquedaNombre();
         break;
@@ -475,7 +479,6 @@ void verClientes()
 
 void agregarPago()
 {
-    cin.ignore();
     double pago;
     int decimales = 2;
     int mes;
@@ -511,9 +514,14 @@ void agregarPago()
 
         if (key == 27)
         {
+            fseek(archivoCliente, 0, SEEK_SET);
+            for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
+            {
+                fwrite(&(*i), sizeof(Clientes), 1, archivoCliente);
+            }
+
             clientesAux.clear();
             posiciones.clear();
-
             fclose(archivoPagos);
             fclose(archivoCliente);
             return;
@@ -725,15 +733,14 @@ string obtenerMes(int mes)
 
 void busquedaDui()
 {
-    bool clienteEncontrado = false;
+    posicion = 0;
     char dui[100];
-    int edicion = 0;
-    Clientes temp;
-    system("cls");
-
+    bool existe = false;
     cin.ignore();
 
-    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
+    system("cls");
+
+    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "rb");
     getSizeClientes();
 
     do
@@ -749,59 +756,33 @@ void busquedaDui()
         {
             if (strcmp(i->dui, dui) == 0)
             {
-                cout << i->nombres << " " << i->apellidos << endl;
-                clienteEncontrado = true;
-                cout << "Que desea Editar" << endl;
-                cout << "1. Nombre" << endl;
-                cout << "2. Apellidos" << endl;
-                cout << "Seleccione una opcion: ";
-                edicion = leer();
-                cin.ignore();
-                switch (edicion)
-                {
-                case 1:
-                    ingresoNombre();
-                    validarMayusculas();
-                    strcpy(i->nombres, cliente.nombres);
-                    break;
-                case 2:
-                    ingresoApellido();
-                    validarMayusculas();
-                    strcpy(i->apellidos, cliente.apellidos);
-                    break;
-
-                default:
-                    break;
-                }
+                existe = true;
                 break;
             }
-        }
-
-        if (!clienteEncontrado)
-        {
-            cout << RED << "Cliente no encontrado" << RESET << endl;
-            cin.get();
-            fclose(archivo);
-            return;
-        }
-
-        fseek(archivo, 0, SEEK_SET);
-        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
-        {
-            fwrite(&(*i), sizeof(Clientes), 1, archivo);
+            posicion++;
         }
     }
+
     fclose(archivo);
-    clientesAux.clear();
-    cout << GREEN << "Datos actualizados correctamente" << RESET;
-    cin.get();
+
+    if (existe)
+    {
+        cout << clientesAux[posicion].dui << " " << clientesAux[posicion].nombres << " " << clientesAux[posicion].apellidos;
+        seleccion();
+    }
+    else
+    {
+        cout << RED << "No hay clientes registrados con ese dui" << RESET << endl;
+        cin.get();
+        clientesAux.clear();
+        return;
+    }
 }
 
 void busquedaNombre()
 {
-    char nombre[MAX_CLIENT];
+    posicion = 0;
     int lista = 1;
-    Clientes temp;
     system("cls");
 
     cin.ignore();
@@ -826,7 +807,7 @@ void busquedaNombre()
     }
     fclose(archivo);
 
-    loop();
+    funcionEditar();
 }
 
 void busquedaApellido()
@@ -940,9 +921,8 @@ void edicion()
     }
 }
 
-void loop()
+void funcionEditar()
 {
-    int key;
     if (posiciones.empty())
     {
         cout << RED << "No hay clientes registrados con ese nombre" << RESET << endl;
@@ -958,43 +938,50 @@ void loop()
 
         posicion = posiciones[posicion - 1];
 
-        cout << "Que desea realizar con el cliente" << endl;
-        cout << "Esc para salir" << endl;
-        cout << "F1 para agregar pago" << endl;
-        cout << "F2 para editar" << endl;
-        cout << "F3 para eliminar" << endl;
+        seleccion();
+    }
+}
+
+void seleccion()
+{
+    cin.ignore();
+    int key;
+    cout << "Que desea realizar con el cliente" << endl;
+    cout << "Esc para salir" << endl;
+    cout << "F1 para agregar pago" << endl;
+    cout << "F2 para editar" << endl;
+    cout << "F3 para eliminar" << endl;
+    key = _getch();
+
+    if (key == 27)
+    {
+        clientesAux.clear();
+        posiciones.clear();
+        return;
+    }
+
+    if (key == 0 || key == 224)
+    {
         key = _getch();
 
-        if (key == 27)
+        if (key == 59)
         {
-            clientesAux.clear();
-            posiciones.clear();
+            agregarPago();
             return;
         }
 
-        if (key == 0 || key == 224)
+        if (key == 60)
         {
-            key = _getch();
+            editar();
+            cin.get();
 
-            if (key == 59)
-            {
-                agregarPago();
-                return;
-            }
+            return;
+        }
 
-            if (key == 60)
-            {
-                editar();
-                cin.get();
-
-                return;
-            }
-
-            if (key == 61)
-            {
-                eliminarCliente();
-                return;
-            }
+        if (key == 61)
+        {
+            eliminarCliente();
+            return;
         }
     }
 }
@@ -1004,17 +991,11 @@ void eliminarCliente()
     int eliminar = 0, intentos = 3;
     bool elimina = false;
 
-    cin.ignore();
-
     FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "wb");
-
-    Clientes borrar;
-
-    borrar = clientesAux[posicion];
 
     if (archivo != NULL)
     {
-        cout << "Esta seguro de eliminar el cliente? (si->1, no->0): " << endl;
+        cout << "Esta seguro de eliminar el cliente? (si->1, no->0): ";
         eliminar = leer();
 
         if (eliminar == 0)
@@ -1054,14 +1035,16 @@ void eliminarCliente()
                 fwrite(&cliente, sizeof(Clientes), 1, archivo);
             }
 
-            cout << GREEN << "Datos eliminado correctamente" << RESET;
+            cout << endl
+                 << GREEN << "Datos eliminado correctamente" << RESET;
         }
         else
         {
-            cout << RED << "No se puedo eliminar al cliente" << RESET << endl;
+            cout << endl
+                 << RED << "No se puedo eliminar al cliente" << RESET << endl;
         }
     }
-
+    cin.ignore();
     cin.get();
     fclose(archivo);
 
@@ -1169,50 +1152,6 @@ void formatoVia()
         if (auxiliar != NULL)
         {
             strcat(cliente.direccion.via, " ");
-        }
-    }
-}
-
-void formatoMunicipio()
-{
-    char cadena[MAX_LENGTH];
-    char *auxiliar;
-
-    strcpy(cadena, cliente.direccion.municipio);
-    strcpy(cliente.direccion.municipio, "");
-
-    auxiliar = strtok(cadena, " ");
-
-    while (auxiliar != NULL)
-    {
-        strcat(cliente.direccion.municipio, auxiliar);
-        auxiliar = strtok(NULL, " ");
-
-        if (auxiliar != NULL)
-        {
-            strcat(cliente.direccion.municipio, " ");
-        }
-    }
-}
-
-void formatoDepto()
-{
-    char cadena[MAX_LENGTH];
-    char *auxiliar;
-
-    strcpy(cadena, cliente.direccion.depto);
-    strcpy(cliente.direccion.depto, "");
-
-    auxiliar = strtok(cadena, " ");
-
-    while (auxiliar != NULL)
-    {
-        strcat(cliente.direccion.depto, auxiliar);
-        auxiliar = strtok(NULL, " ");
-
-        if (auxiliar != NULL)
-        {
-            strcat(cliente.direccion.depto, " ");
         }
     }
 }
@@ -1452,7 +1391,7 @@ void ingresarDireccion()
     }
     else
     {
-        strcpy(cliente.direccion.municipio, sanviNorte[op - 8]);
+        strcpy(cliente.direccion.municipio, sanviSur[op - 8]);
     }
 
     cont++; // 4
