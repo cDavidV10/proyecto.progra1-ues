@@ -32,14 +32,13 @@ struct Direccion
     char via[MAX_LENGTH];
     int numCasa;
     char municipio[MAX_LENGTH];
-    char depto[MAX_LENGTH];
     char completa[MAX_ADDRESS];
 };
 
 struct Clientes
 {
-    char nombres[MAX_CLIENT];
-    char apellidos[MAX_CLIENT];
+    char nombres[MAX_LENGTH];
+    char apellidos[MAX_LENGTH];
     Direccion direccion;
     char dui[100];
     bool pago;
@@ -435,6 +434,8 @@ void verClientes()
         cout << "Apellidos ";
         gotoxy(50, 2);
         cout << "DUI ";
+        gotoxy(70, 2);
+        cout << "Distrito";
 
         while (!feof(archivo))
         {
@@ -450,6 +451,8 @@ void verClientes()
                 cout << cliente.apellidos;
                 gotoxy(50, 3 + i);
                 cout << cliente.dui;
+                gotoxy(70, 3 + i);
+                cout << cliente.direccion.municipio;
             }
 
             i++;
@@ -998,7 +1001,8 @@ void loop()
 
 void eliminarCliente()
 {
-    int eliminar = 0;
+    int eliminar = 0, intentos = 3;
+    bool elimina = false;
 
     cin.ignore();
 
@@ -1021,18 +1025,46 @@ void eliminarCliente()
             return;
         }
 
-        clientesAux.erase(clientesAux.begin() + posicion);
-
-        fseek(archivo, 0, SEEK_SET);
-
-        for (auto &cliente : clientesAux)
+        do
         {
-            fwrite(&cliente, sizeof(Clientes), 1, archivo);
+            cout << "Escriba su contrase" << (char)164 << "a: ";
+            password();
+
+            if (verificarUsuario(true))
+            {
+                elimina = true;
+            }
+            else
+            {
+                cout << RED << "\nEl usuario y/o el password son incorrectos" << RESET << endl;
+                cin.ignore();
+                cin.get();
+                intentos--;
+            }
+        } while (!elimina && intentos > 0);
+
+        if (elimina)
+        {
+            clientesAux.erase(clientesAux.begin() + posicion);
+
+            fseek(archivo, 0, SEEK_SET);
+
+            for (auto &cliente : clientesAux)
+            {
+                fwrite(&cliente, sizeof(Clientes), 1, archivo);
+            }
+
+            cout << GREEN << "Datos eliminado correctamente" << RESET;
+        }
+        else
+        {
+            cout << RED << "No se puedo eliminar al cliente" << RESET << endl;
         }
     }
 
+    cin.get();
     fclose(archivo);
-    cout << GREEN << "Datos eliminado correctamente" << RESET;
+
     clientesAux.clear();
     posiciones.clear();
 }
@@ -1380,49 +1412,50 @@ void ingresarDireccion()
 
     fflush(stdin);
 
-    do
+    do // Este do-while es lo que muestra y permite ingresar el municipio
     {
         system("cls");
+
         gotoxy(10, 0);
         cout << "Estas en la seccion: [Zona, Via, No.Casa, " << GREEN << "Municipio" << RESET << "]\n";
-        cout << "\nIngrese el municipio: ";
-        cin.getline(cliente.direccion.municipio, MAX_ADDRESS);
 
-        formatoMunicipio();
+        gotoxy(8, 2);
+        cout << "San Vicente Norte";
 
-        /////////////////// Mayusculas //////////////////////
-
-        strcpy(aux, cliente.direccion.municipio);
-
-        for (int i = 0; i < strlen(cliente.direccion.municipio); i++)
+        for (int i = 0; i < 7; i++)
         {
-            aux[i] = toupper(cliente.direccion.municipio[i]);
+            gotoxy(9, 3 + i);
+            validarMayusDireccion(sanviNorte[i]);
+            cout << i + 1 << ". " << sanviNorte[i];
         }
 
-        /////////////////////////////////////////////////////
+        gotoxy(50, 2);
+        cout << "San Vicente Sur";
 
-        for (int i = 0; i < 14; i++)
+        for (int i = 0; i < 6; i++)
         {
-            if (strcmp(aux, sanviNorte[i]) == 0)
-            {
-                isReal = true;
-                op = 1; // Para saber si entro en SanviNorte
-                break;
-            }
-
-            if (strcmp(aux, sanviSur[i]) == 0)
-            {
-                isReal = true;
-                op = 2; // Para saber si entro en sanviSur
-                break;
-            }
+            gotoxy(51, 3 + i);
+            validarMayusDireccion(sanviSur[i]);
+            cout << 8 + i << ". " << sanviSur[i];
         }
+        fflush(stdin);
 
-    } while (!validarCliente(cliente.direccion.municipio));
+        gotoxy(0, 11);
+        cout << "Seleccione su municipio: ";
+        op = leer();
+
+    } while (!(op >= 1 && op <= 13));
+
+    if (op < 8)
+    {
+        strcpy(cliente.direccion.municipio, sanviNorte[op - 1]);
+    }
+    else
+    {
+        strcpy(cliente.direccion.municipio, sanviNorte[op - 8]);
+    }
 
     cont++; // 4
-
-    validarMayusDireccion(cliente.direccion.municipio);
 
     concatenarDireccion(op, cont);
 
