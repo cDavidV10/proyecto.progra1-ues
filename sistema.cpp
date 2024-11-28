@@ -25,6 +25,8 @@ const double PRECIO_KWH = 0.16;
 const double MULTA_RETRASO = 0.03;
 const int MES_ACTUAL = 10;
 const int ANIO_ACTUAL = 2024;
+const string meses[12] = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
 
 struct Direccion
 {
@@ -65,6 +67,7 @@ int manteOpcion = 0;
 int opcion = 0;
 int menu = 0;
 int posicion = 0;
+int mes = 0;
 
 vector<Clientes> clientesAux;
 vector<int> posiciones;
@@ -83,7 +86,7 @@ void verClientes();
 void agregarPago();
 void verPago();
 void pago();
-string obtenerMes(int mes);
+void obtenerMes();
 void correlativo();
 void seccionCliente();
 void seleccion();
@@ -481,7 +484,6 @@ void agregarPago()
 {
     double pago;
     int decimales = 2;
-    int mes;
     int key;
     double consumoKw;
     RegistroPago pagoExistente;
@@ -534,22 +536,9 @@ void agregarPago()
         {
 
             cout << "Seleccione el mes para el pago:" << endl;
-            for (int i = 1; i <= 12; i++)
-            {
-                cout << i << ". " << obtenerMes(i) << endl;
-            }
+            obtenerMes();
 
-            cout << "Mes (1-12): ";
-            cin >> mes;
-
-            if (mes < 1 || mes > 12)
-            {
-                cout << "\nMes invalido. Ingrese nuevamente" << endl;
-                system("pause");
-                fclose(archivoPagos);
-                clientesAux.clear();
-                return;
-            }
+            mes = mes - 1;
 
             while (!feof(archivoPagos))
             {
@@ -564,7 +553,7 @@ void agregarPago()
 
             if (pagoRegistrado)
             {
-                cout << "\nEste cliente ya ha pagado en el mes " << obtenerMes(mes) << " del a" << (char)164 << "o " << ANIO_ACTUAL << "." << endl;
+                cout << "\nEste cliente ya ha pagado en el mes " << meses[mes] << " del a" << (char)164 << "o " << ANIO_ACTUAL << "." << endl;
                 fseek(archivoCliente, 0, SEEK_SET);
                 for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
                 {
@@ -604,7 +593,7 @@ void agregarPago()
 
             clientesAux[posicion].pago = true;
 
-            cout << "\nPago de $" << pago << " agregado correctamente para el mes " << obtenerMes(mes) << " del a" << (char)164 << "o: " << ANIO_ACTUAL << endl;
+            cout << "\nPago de $" << pago << " agregado correctamente para el mes " << meses[mes] << " del a" << (char)164 << "o: " << ANIO_ACTUAL << endl;
             system("pause");
         }
 
@@ -654,7 +643,7 @@ void verPago()
     if (archivoPagos != NULL)
     {
         RegistroPago pago;
-        sitio = 3;
+        sitio = 2;
 
         while (!feof(archivoPagos))
         {
@@ -677,16 +666,26 @@ void verPago()
             return;
         }
 
+        cout << "Seleccione el mes para ver el pago:" << endl;
+
+        obtenerMes();
+
+        mes = mes - 1;
+
+        system("cls");
+
+        cout << "------     LISTA DE CLIENTE     ------" << endl;
+
         for (size_t i = 0; i < clientesAux.size(); i++)
         {
             for (size_t j = 0; j < pagos.size(); j++)
             {
-                if (strcmp(clientesAux[i].nombres, pagos[j].persona) == 0)
+                if (strcmp(clientesAux[i].nombres, pagos[j].persona) == 0 && pagos[j].mes == mes)
                 {
                     gotoxy(0, sitio);
                     cout << "Cliente: " << clientesAux[i].nombres << " " << clientesAux[i].apellidos;
                     cout << " | DUI: " << clientesAux[i].dui;
-                    cout << " | Mes: " << obtenerMes(pagos[j].mes) << " | A" << (char)164 << "o " << pagos[j].anio;
+                    cout << " | Mes: " << meses[mes] << " | A" << (char)164 << "o " << pagos[j].anio;
                     cout << " | Monto: $" << pagos[j].pago;
                     if (clientesAux[i].pago)
                     {
@@ -714,19 +713,18 @@ void verPago()
 }
 
 // Agregue esta funcion para utilizar los meses tanto en ver pago como agregar
-
-string obtenerMes(int mes)
+void obtenerMes()
 {
-
-    string meses[12] = {"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
-
-    if (mes < 1 || mes > 12)
+    for (int i = 0; i <= 11; i++)
     {
-        return "Mes invalido";
+        cout << i + 1 << ". " << meses[i] << endl;
     }
 
-    return meses[mes - 1];
+    do
+    {
+        cout << "Mes (1-12): ";
+        mes = leer();
+    } while (mes < 1 || mes > 12);
 }
 
 /////////////////////////// fin
