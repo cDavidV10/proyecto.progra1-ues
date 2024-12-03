@@ -343,6 +343,18 @@ void editar()
 void ingresarClientes()
 {
     bool isEncontrado = false;
+    int key;
+
+    system("cls");
+    cout << "Presione cualquier tecla para continuar" << endl;
+    cout << "Presione esc para salir" << endl;
+
+    key = _getch();
+
+    if (key == 27)
+    {
+        return;
+    }
     FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "a+b");
 
     if (archivo != NULL)
@@ -490,6 +502,17 @@ void agregarPago()
     bool pagoRegistrado = false;
     int mesesDeRetraso;
 
+    system("cls");
+    cout << "Presione cualquier tecla para continuar" << endl;
+    cout << "Presione esc para salir" << endl;
+
+    key = _getch();
+
+    if (key == 27)
+    {
+        return;
+    }
+
     if (clientesAux.empty())
     {
         cout << RED << "No hay clientes registrados" << RESET << endl;
@@ -508,26 +531,6 @@ void agregarPago()
     {
 
         cout << "Cliente encontrado: " << clientesAux[posicion].nombres << " " << clientesAux[posicion].apellidos << endl;
-
-        cout << "Presione cualquier tecla para continuar" << endl;
-        cout << "Presione esc para salir" << endl;
-
-        key = _getch();
-
-        if (key == 27)
-        {
-            fseek(archivoCliente, 0, SEEK_SET);
-            for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
-            {
-                fwrite(&(*i), sizeof(Clientes), 1, archivoCliente);
-            }
-
-            clientesAux.clear();
-            posiciones.clear();
-            fclose(archivoPagos);
-            fclose(archivoCliente);
-            return;
-        }
 
         cout << "Ingrese el consumo en kWh: ";
         cin >> consumoKw;
@@ -619,14 +622,26 @@ void agregarPago()
 void verPago()
 {
     bool registroEncontrado = false;
-    int sitio;
+    int sitio, key;
     bool pagoRealizado;
     bool pagoCliente;
 
     cin.ignore();
 
     system("cls");
+
+    cout << "Presione cualquier tecla para continuar" << endl;
+    cout << "Presione esc para salir" << endl;
+
+    key = _getch();
+
+    if (key == 27)
+    {
+        return;
+    }
     cout << "------     VER PAGO     ------" << endl;
+
+    system("cls");
 
     FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "rb");
 
@@ -709,6 +724,7 @@ void verPago()
     }
     pagos.clear();
     clientesAux.clear();
+    fclose(archivoPagos);
     system("pause");
 }
 
@@ -724,7 +740,7 @@ void obtenerMes()
     {
         cout << "Mes (1-12): ";
         mes = leer();
-    } while (mes < 1 || mes > 12);
+    } while (mes < 0 || mes > 12);
 }
 
 /////////////////////////// fin
