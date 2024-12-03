@@ -86,6 +86,7 @@ void verClientes();
 void agregarPago();
 void verPago();
 void pago();
+void redondear(double &);
 void obtenerMes();
 void correlativo();
 void seccionCliente();
@@ -495,6 +496,13 @@ void verClientes()
     system("pause");
 }
 
+void redondear(double &pago)
+{
+    int decimales = 2;
+
+    pago = round(pago * pow(10, decimales)) / pow(10, decimales);
+}
+
 void agregarPago()
 {
     double pago;
@@ -580,6 +588,7 @@ void agregarPago()
             if (mesesDeRetraso > 2)
             {
                 pago = consumoKw * PRECIO_KWH * (1 + MULTA_RETRASO) * (1 + 0.30) * (1 + 0.13);
+                redondear(pago);
                 cout << "\nSe ha aplicado una multa del 3% por retraso. El monto total a pagar es: " << pago << endl;
             }
             else
@@ -587,8 +596,7 @@ void agregarPago()
                 pago = (consumoKw * PRECIO_KWH) + (consumoKw * 0.3) + (consumoKw * 0.13);
             }
 
-            pago = round(pago * pow(10, decimales)) / pow(10, decimales);
-
+            redondear(pago);
             RegistroPago registroPago;
             strcpy(registroPago.persona, clientesAux[posicion].nombres);
             registroPago.pago = pago;
