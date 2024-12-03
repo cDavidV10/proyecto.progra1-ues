@@ -94,7 +94,6 @@ void seleccion();
 // Funciones encargadas de editar
 void busquedaDui();
 void busquedaNombre();
-void busquedaApellido();
 void edicion();
 void funcionEditar();
 
@@ -830,71 +829,6 @@ void busquedaNombre()
     fclose(archivo);
 
     funcionEditar();
-}
-
-void busquedaApellido()
-{
-    char nombre[MAX_CLIENT];
-    int posicion = 0, lista = 1;
-    Clientes temp;
-    system("cls");
-
-    cin.ignore();
-
-    FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "r+b");
-    getSizeClientes();
-    vector<int> posiciones;
-
-    ingresoApellido();
-
-    if (archivo != NULL)
-    {
-        for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
-        {
-            if (strcmp(i->apellidos, cliente.apellidos) == 0)
-            {
-                cout << lista << ". " << i->dui << " " << i->nombres << " " << i->apellidos << endl;
-                lista++;
-                posiciones.push_back(posicion);
-            }
-            posicion++;
-        }
-
-        if (posiciones.empty())
-        {
-            cout << RED << "No hay clientes registrados con ese apellido" << RESET << endl;
-            fclose(archivo);
-            clientesAux.clear();
-            return;
-        }
-        else
-        {
-            cout << "Seleccione el usuario a editar: ";
-            posicion = leer();
-
-            if (posicion == 0)
-            {
-                fclose(archivo);
-                clientesAux.clear();
-                return;
-            }
-
-            posicion = posiciones[posicion - 1];
-
-            edicion();
-
-            fseek(archivo, 0, SEEK_SET);
-            for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
-            {
-                fwrite(&(*i), sizeof(Clientes), 1, archivo);
-            }
-        }
-    }
-
-    fclose(archivo);
-    clientesAux.clear();
-    cout << GREEN << "Datos actualizados correctamente" << RESET;
-    cin.get();
 }
 
 void edicion()
