@@ -119,6 +119,7 @@ void password();
 //
 void getSizeClientes();
 int leer();
+void user();
 void gotoxy(int, int);
 
 void ingresarDireccion();
@@ -253,7 +254,7 @@ void crearCuenta()
         }
     }
 
-    system("Pause");
+    cin.get();
 }
 
 void menuPrincipal()
@@ -261,6 +262,7 @@ void menuPrincipal()
     do
     {
         system("cls");
+        user();
         cout << "------     MENU PRINCIPAL     ------" << endl;
         cout << "1. Agregar Cliente" << endl;
         cout << "2. Busqueda" << endl;
@@ -297,6 +299,7 @@ void menuPrincipal()
 void busqueda()
 {
     system("cls");
+    user();
     cout << "-----    BUSQUEDA DE CLIENTES POR    -----" << endl;
     cout << "1. DUI" << endl;
     cout << "2. Nombres" << endl;
@@ -361,6 +364,7 @@ void ingresarClientes()
     {
         cin.ignore();
         system("cls");
+        user();
 
         do
         {
@@ -396,6 +400,8 @@ void ingresarClientes()
 
             strcpy(aux, cliente.direccion.completa);
 
+            getSizeClientes();
+
             for (auto i = clientesAux.begin(); i != clientesAux.end(); i++)
             {
                 isEncontrado = false;
@@ -403,10 +409,11 @@ void ingresarClientes()
                 {
                     cout << RED << "[ADVERTENCIA]: No puede ingresar dos veces la misma direccion. Intente de nuevo." << RESET << endl;
                     isEncontrado = true;
-                    system("pause");
+                    cin.get();
+                    break;
                 }
             }
-
+            clientesAux.clear();
         } while (isEncontrado);
 
         fflush(stdin);
@@ -489,9 +496,6 @@ void verClientes()
     system("pause");
 }
 
-//////////////////////////////////////////////////////////////
-///////////////////////////////////////////////Modificaciones
-
 void agregarPago()
 {
     double pago;
@@ -524,6 +528,7 @@ void agregarPago()
     FILE *archivoCliente = fopen(RUTA_CLIENTE.c_str(), "wb");
 
     system("cls");
+    user();
 
     cout << "------     PAGO    ------" << endl;
 
@@ -597,13 +602,13 @@ void agregarPago()
             clientesAux[posicion].pago = true;
 
             cout << "\nPago de $" << pago << " agregado correctamente para el mes " << meses[mes] << " del a" << (char)164 << "o: " << ANIO_ACTUAL << endl;
-            system("pause");
+            cin.get();
         }
 
         else
         {
             cout << "\nEl consumo debe ser mayor a 0 kWh" << endl;
-            system("pause");
+            cin.get();
         }
 
         fseek(archivoCliente, 0, SEEK_SET);
@@ -642,6 +647,7 @@ void verPago()
     cout << "------     VER PAGO     ------" << endl;
 
     system("cls");
+    user();
 
     FILE *archivoPagos = fopen(RUTA_REGISTRO.c_str(), "rb");
 
@@ -658,7 +664,7 @@ void verPago()
     if (archivoPagos != NULL)
     {
         RegistroPago pago;
-        sitio = 2;
+        sitio = 3;
 
         while (!feof(archivoPagos))
         {
@@ -688,6 +694,7 @@ void verPago()
         mes = mes - 1;
 
         system("cls");
+        user();
 
         cout << "------     LISTA DE CLIENTE     ------" << endl;
 
@@ -725,10 +732,10 @@ void verPago()
     pagos.clear();
     clientesAux.clear();
     fclose(archivoPagos);
-    system("pause");
+    cin.ignore();
+    cin.get();
 }
 
-// Agregue esta funcion para utilizar los meses tanto en ver pago como agregar
 void obtenerMes()
 {
     for (int i = 0; i <= 11; i++)
@@ -743,8 +750,6 @@ void obtenerMes()
     } while (mes < 0 || mes > 12);
 }
 
-/////////////////////////// fin
-
 void busquedaDui()
 {
     posicion = 0;
@@ -753,6 +758,7 @@ void busquedaDui()
     cin.ignore();
 
     system("cls");
+    user();
 
     FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "rb");
     getSizeClientes();
@@ -800,6 +806,8 @@ void busquedaNombre()
     system("cls");
 
     cin.ignore();
+
+    user();
 
     FILE *archivo = fopen(RUTA_CLIENTE.c_str(), "rb");
     getSizeClientes();
@@ -1207,6 +1215,7 @@ void ingresarDireccion()
     do
     {
         system("cls");
+        user();
         gotoxy(30, 0);
         cout << "Ingrese la direccion del cliente." << endl;
         gotoxy(10, 2);
@@ -1263,6 +1272,7 @@ void ingresarDireccion()
     do
     {
         system("cls");
+        user();
         gotoxy(10, 0);
         cout << "Estas en la seccion: [Zona, " << GREEN << "Via" << RESET << ", No.Casa, Municipio]\n";
         gotoxy(0, 2);
@@ -1352,6 +1362,7 @@ void ingresarDireccion()
     system("cls");
 
     fflush(stdin);
+    user();
 
     gotoxy(10, 0);
     cout << "Estas en la seccion: [Zona, Via, " << GREEN << "No.Casa" << RESET << ", Municipio]\n";
@@ -1368,6 +1379,7 @@ void ingresarDireccion()
     do // Este do-while es lo que muestra y permite ingresar el municipio
     {
         system("cls");
+        user();
 
         gotoxy(10, 0);
         cout << "Estas en la seccion: [Zona, Via, No.Casa, " << GREEN << "Municipio" << RESET << "]\n";
@@ -1665,7 +1677,7 @@ bool duiExiste(char dui[])
     return false;
 }
 
-bool comprobarPassword() // Te agregue lo del caracter especial
+bool comprobarPassword()
 {
     bool largo = false;
     bool mayus = false;
@@ -1674,7 +1686,7 @@ bool comprobarPassword() // Te agregue lo del caracter especial
 
     const char caracteres[] = "!@#$%^&*()-_=+[]{}|;:'\",.<>?/";
 
-    if (strlen(usuario.password) >= 8) // te cambie que la contrasena sea desde 8 en adelante
+    if (strlen(usuario.password) >= 8)
     {
         largo = true;
     }
@@ -1809,6 +1821,21 @@ int leer()
         }
     }
     return numero;
+}
+
+void user()
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+    int width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int x = width - strlen(usuario.usuario);
+    int y = 0;
+
+    gotoxy(x, y);
+    cout << usuario.usuario;
+
+    gotoxy(0, 1);
 }
 
 void gotoxy(int x, int y)
